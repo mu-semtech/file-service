@@ -8,8 +8,6 @@ class DocumentsController < ApplicationController
     file_name = sanitize_filename(file.original_filename)
     File.open("#{@@storage_location}/#{file_name}", 'wb') { |f| f.write(file.read) }
 
-    # TODO add file metadata
-
     render json: nil, status: :ok
   end
 
