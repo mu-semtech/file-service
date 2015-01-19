@@ -10,12 +10,19 @@ class DocumentsController < ApplicationController
 
     # TODO add file metadata
 
-    render json: { }, status: :ok
+    render json: nil, status: :ok
   end
 
   # GET /documents/:id
   def show
     send_file "#{@@storage_location}/#{params[:id]}.#{params[:format]}", disposition: 'attachment'
+  end
+
+  # DELETE /documents/:id
+  def destroy
+    File.delete "#{@@storage_location}/#{params[:id]}.#{params[:format]}"
+
+    render json: nil, status: :no_content
   end
 
   private
