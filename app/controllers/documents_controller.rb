@@ -13,6 +13,11 @@ class DocumentsController < ApplicationController
     render json: { }, status: :ok
   end
 
+  # GET /documents/:id
+  def show
+    send_file "#{@@storage_location}/#{params[:id]}.#{params[:format]}", disposition: 'attachment'
+  end
+
   private
 
   def sanitize_filename(file_name)
