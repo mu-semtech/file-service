@@ -25,6 +25,10 @@ class DocumentsController < ApplicationController
     render json: nil, status: :no_content
   end
 
+  rescue_from ActionController::MissingFile do |e|
+    render json: { status: 'Not found' }, status: :not_found
+  end
+
   private
 
   def sanitize_filename(file_name)
