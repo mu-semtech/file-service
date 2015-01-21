@@ -1,14 +1,39 @@
 class DocumentsController < ApplicationController
 
+  include RDF
+
   @@storage_location = '/tmp/rails'
+  @@graph = "http://tstr.semte.ch/"
+  @@sparql_access_point = "http://localhost:8890/sparql"
+
+  @@nfo = RDF::Vocabulary.new("http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#")
 
   # POST /documents
   def create
-    file = params[:file]
-    file_name = sanitize_filename(file.original_filename)
-    File.open("#{@@storage_location}/#{file_name}", 'wb') { |f| f.write(file.read) }
+    uploaded_file = params[:file]
 
-    render json: nil, status: :ok
+    document = {}
+    document[:id] = "fwooptiedoe" # TODO
+    document[:name] = "#{document[:id]}.#{uploaded_file.original_filename.split('.').last}"
+    file_path = "#{@@storage_location}/#{document[:name]}"
+    document[:href] = "#{@@graph}documents/#{document[:name]}"
+    document[:format] = uploaded_file.content_type
+    document[:size] = File.size(file_path)
+    File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
+
+    query =  " INSERT DATA {"
+    query += "   GRAPH <#{@@graph}/#{params[:project]}> {"
+    query += "     <#{document[:href]}> a <#{@@nfo.FileDataObject}> ;"
+    query += "             <#{@@nfo.fileName}> \"#{document[:name]}\" ;"
+    query += "             <#{DC.identifier}> \"#{document[:id]}\" ;"
+    query += "             <#{DC.format}> \"#{document[:format]}\" ;"
+    query += "             <#{@@nfo.fileSize}> \"#{document[:size]}\"^^xsd:integer ."
+    query += "   }"
+    query += " }"
+
+    sparql_client.update(query)
+
+    render json: { :document => document }, status: :ok
   end
 
   # GET /documents/:id
@@ -29,11 +54,8 @@ class DocumentsController < ApplicationController
 
   private
 
-  def sanitize_filename(file_name)
-    # get only the filename, not the whole path (from IE)
-    just_filename = File.basename(file_name)
-    # replace all non alphanumeric, underscore or periods with underscore
-    just_filename.sub(/[^\w\.\-]/,'_')
+  def sparql_client
+    SPARQL::Client.new(@@sparql_access_point)
   end
 
 end
