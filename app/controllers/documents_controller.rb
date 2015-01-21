@@ -13,13 +13,13 @@ class DocumentsController < ApplicationController
     uploaded_file = params[:file]
 
     document = {}
-    document[:id] = "fwooptiedoe" # TODO
+    document[:id] = SecureRandom.uuid
     document[:name] = "#{document[:id]}.#{uploaded_file.original_filename.split('.').last}"
     file_path = "#{@@storage_location}/#{document[:name]}"
     document[:href] = "#{@@graph}documents/#{document[:name]}"
     document[:format] = uploaded_file.content_type
-    document[:size] = File.size(file_path)
     File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
+    document[:size] = File.size(file_path)
 
     query =  " INSERT DATA {"
     query += "   GRAPH <#{@@graph}/#{params[:project]}> {"
