@@ -11,8 +11,8 @@ class DocumentsController < ApplicationController
     document = {}
     document[:id] = SecureRandom.uuid
     document[:name] = "#{document[:id]}.#{uploaded_file.original_filename.split('.').last}"
-    file_path = "#{@storage_location}/#{document[:name]}"
-    document[:href] = "#{@graph}documents/#{document[:name]}"
+    file_path = file_path(document[:name])
+    document[:href] = uri(document[:name])
     document[:format] = uploaded_file.content_type
     File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
     document[:size] = File.size(file_path)
@@ -20,10 +20,10 @@ class DocumentsController < ApplicationController
     query =  " INSERT DATA {"
     query += "   GRAPH <#{@graph}/#{params[:project]}> {"
     query += "     <#{document[:href]}> a <#{NFO.FileDataObject}> ;"
-    query += "             <#{NFO.fileName}> \"#{document[:name]}\" ;"
-    query += "             <#{DC.identifier}> \"#{document[:id]}\" ;"
-    query += "             <#{DC.format}> \"#{document[:format]}\" ;"
-    query += "             <#{NFO.fileSize}> \"#{document[:size]}\"^^xsd:integer ."
+    query += "         <#{NFO.fileName}> \"#{document[:name]}\" ;"
+    query += "         <#{DC.identifier}> \"#{document[:id]}\" ;"
+    query += "         <#{DC.format}> \"#{document[:format]}\" ;"
+    query += "         <#{NFO.fileSize}> \"#{document[:size]}\"^^xsd:integer ."
     query += "   }"
     query += " }"
 
@@ -39,7 +39,26 @@ class DocumentsController < ApplicationController
 
   # DELETE /documents/:id
   def destroy
-    File.delete "#{@storage_location}/#{params[:id]}.#{params[:format]}"
+    file_name = "#{params[:id]}.#{params[:format]}"
+    path = file_path(file_name)
+    File.delete path if File.exist? path
+
+    query =  " WITH <#{@graph}/#{params[:project]}> "
+    query += " DELETE {"
+    query += "   <#{uri(file_name)}> a <#{NFO.FileDataObject}> ;"
+    query += "       <#{NFO.fileName}> ?fileName ;"
+    query += "       <#{DC.identifier}> ?id ;"
+    query += "       <#{DC.format}> ?format ;"
+    query += "       <#{NFO.fileSize}> ?fileSize ."
+    query += " }"
+    query += " WHERE {"
+    query += "   <#{uri(file_name)}> a <#{NFO.FileDataObject}> ;"
+    query += "       <#{NFO.fileName}> ?fileName ;"
+    query += "       <#{DC.identifier}> ?id ;"
+    query += "       <#{DC.format}> ?format ;"
+    query += "       <#{NFO.fileSize}> ?fileSize ."
+    query += " }"
+    @sparql_client.update(query)
 
     render json: nil, status: :no_content
   end
@@ -51,6 +70,8 @@ class DocumentsController < ApplicationController
     render json: { status: 'Not found' }, status: :not_found
   end
 
+
+
   private
 
   def set_config
@@ -58,6 +79,14 @@ class DocumentsController < ApplicationController
     @graph = Rails.application.config.x.rdf.graph_base
     @sparql_access_point = Rails.application.config.x.rdf.sparql_endpoint
     @sparql_client = SPARQL::Client.new(@sparql_access_point)
+  end
+
+  def uri(name)
+    "#{@graph}documents/#{name}"
+  end
+
+  def file_path(name)
+    "#{@storage_location}/#{name}"
   end
 
 end
