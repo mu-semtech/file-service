@@ -38,6 +38,9 @@ gem 'spring',        group: :development
 # Use debugger
 # gem 'debugger', group: [:development, :test]
 
+gem 'rdf'
+gem 'sparql-client', require: 'sparql/client'
+
 group :development do
   gem 'better_errors'
 end
