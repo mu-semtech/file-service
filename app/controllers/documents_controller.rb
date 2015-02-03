@@ -59,6 +59,18 @@ class DocumentsController < ApplicationController
 
     render json: { :document => document }, status: :ok
   end
+
+  # GET /documents/:id/download
+  def download
+    query = " SELECT ?fileUrl FROM <#{@graph}/#{params[:project]}> WHERE {"
+    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{DC.identifier}> \"#{params[:id]}\" ."
+    query += " }"
+
+    result = @sparql_client.query(query)
+    raise ActionController::MissingFile if result.empty?
+    url = result.first[:fileUrl].value
+
+    send_file URI(url).path, disposition: 'attachment'
   end
 
   # DELETE /documents/:id

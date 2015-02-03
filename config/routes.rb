@@ -1,7 +1,11 @@
 Rails.application.routes.draw do
 
   scope path: ':project' do
-    resources :documents
+    resources :documents, only: [:create, :show, :destroy] do
+      member do
+        get 'download'
+      end
+    end
   end
 
   # The priority is based upon order of creation: first created -> highest priority.
