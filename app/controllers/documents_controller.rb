@@ -95,8 +95,8 @@ class DocumentsController < ApplicationController
     @sparql_client = SPARQL::Client.new(@sparql_access_point)
   end
 
-  def uri(name)
-    "#{@graph}documents/#{name}"
+  def uri(project, name)
+    "#{@graph}/#{project}/documents/#{name}"
   end
 
   def file_path(name)
