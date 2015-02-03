@@ -12,7 +12,7 @@ class DocumentsController < ApplicationController
     document[:id] = SecureRandom.uuid
     document[:name] = "#{document[:id]}.#{uploaded_file.original_filename.split('.').last}"
     file_path = file_path(document[:name])
-    document[:href] = uri(document[:name])
+    document[:href] = uri(params[:project], document[:name])
     document[:format] = uploaded_file.content_type
     File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
     document[:size] = File.size(file_path)
@@ -39,8 +39,26 @@ class DocumentsController < ApplicationController
 
   # GET /documents/:id
   def show
-    name = "#{params[:id]}.#{params[:format]}"
-    send_file file_path(name), disposition: 'attachment'
+    query = " SELECT ?uri ?name ?format ?size FROM <#{@graph}/#{params[:project]}> WHERE {"
+    query += "   ?uri <#{DC.identifier}> \"#{params[:id]}\" ;"
+    query += "        <#{NFO.fileName}> ?name ;"
+    query += "        <#{DC.format}> ?format ;"
+    query += "        <#{NFO.fileSize}> ?size ."
+    query += " }"
+
+    result = @sparql_client.query(query)
+    raise ActionController::MissingFile if result.empty?
+
+    document = {}
+    result = result.first
+    document[:href] = result[:uri].value
+    document[:name] = result[:name].value
+    document[:id] = params[:id]
+    document[:format] = result[:format].value
+    document[:size] = result[:size].value
+
+    render json: { :document => document }, status: :ok
+  end
   end
 
   # DELETE /documents/:id
