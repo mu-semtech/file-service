@@ -16,6 +16,7 @@ class DocumentsController < ApplicationController
     document[:format] = uploaded_file.content_type
     File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
     document[:size] = File.size(file_path)
+    now = DateTime.now.xmlschema
 
     query =  " INSERT DATA {"
     query += "   GRAPH <#{@graph}/#{params[:project]}> {"
@@ -23,7 +24,11 @@ class DocumentsController < ApplicationController
     query += "         <#{NFO.fileName}> \"#{document[:name]}\" ;"
     query += "         <#{DC.identifier}> \"#{document[:id]}\" ;"
     query += "         <#{DC.format}> \"#{document[:format]}\" ;"
-    query += "         <#{NFO.fileSize}> \"#{document[:size]}\"^^xsd:integer ."
+    query += "         <#{NFO.fileSize}> \"#{document[:size]}\"^^xsd:integer ;"
+    query += "         <#{NFO.fileUrl}> \"file://#{file_path}\" ;"
+    query += "         <#{DC.created}> \"#{now}\"^^xsd:dateTime ;"
+    query += "         <#{DC.modified}> \"#{now}\"^^xsd:dateTime ."
+    # TODO add creator/contributor
     query += "   }"
     query += " }"
 
@@ -34,7 +39,8 @@ class DocumentsController < ApplicationController
 
   # GET /documents/:id
   def show
-    send_file "#{@storage_location}/#{params[:id]}.#{params[:format]}", disposition: 'attachment'
+    name = "#{params[:id]}.#{params[:format]}"
+    send_file file_path(name), disposition: 'attachment'
   end
 
   # DELETE /documents/:id
@@ -49,14 +55,22 @@ class DocumentsController < ApplicationController
     query += "       <#{NFO.fileName}> ?fileName ;"
     query += "       <#{DC.identifier}> ?id ;"
     query += "       <#{DC.format}> ?format ;"
-    query += "       <#{NFO.fileSize}> ?fileSize ."
+    query += "       <#{NFO.fileSize}> ?fileSize ;"
+    query += "       <#{NFO.fileUrl}> ?fileUrl ;"
+    query += "       <#{DC.created}> ?created ;"
+    query += "       <#{DC.modified}> ?modified ."
+    # TODO remove creator/contributor
     query += " }"
     query += " WHERE {"
     query += "   <#{uri(file_name)}> a <#{NFO.FileDataObject}> ;"
     query += "       <#{NFO.fileName}> ?fileName ;"
     query += "       <#{DC.identifier}> ?id ;"
     query += "       <#{DC.format}> ?format ;"
-    query += "       <#{NFO.fileSize}> ?fileSize ."
+    query += "       <#{NFO.fileSize}> ?fileSize ;"
+    query += "       <#{NFO.fileUrl}> ?fileUrl ;"
+    query += "       <#{DC.created}> ?created ;"
+    query += "       <#{DC.modified}> ?modified ."
+    # TODO remove creator/contributor
     query += " }"
     @sparql_client.update(query)
 
