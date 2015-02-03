@@ -63,29 +63,36 @@ class DocumentsController < ApplicationController
 
   # DELETE /documents/:id
   def destroy
-    file_name = "#{params[:id]}.#{params[:format]}"
-    path = file_path(file_name)
+    query = " SELECT ?fileUrl FROM <#{@graph}/#{params[:project]}> WHERE {"
+    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{DC.identifier}> \"#{params[:id]}\" ."
+    query += " }"
+
+    result = @sparql_client.query(query)
+    raise ActionController::MissingFile if result.empty?
+
+    url = result.first[:fileUrl].value
+    path = URI(url).path
     File.delete path if File.exist? path
 
     query =  " WITH <#{@graph}/#{params[:project]}> "
     query += " DELETE {"
-    query += "   <#{uri(file_name)}> a <#{NFO.FileDataObject}> ;"
+    query += "   ?uri a <#{NFO.FileDataObject}> ;"
+    query += "       <#{NFO.fileUrl}> \"#{url}\" ;"
     query += "       <#{NFO.fileName}> ?fileName ;"
     query += "       <#{DC.identifier}> ?id ;"
     query += "       <#{DC.format}> ?format ;"
     query += "       <#{NFO.fileSize}> ?fileSize ;"
-    query += "       <#{NFO.fileUrl}> ?fileUrl ;"
     query += "       <#{DC.created}> ?created ;"
     query += "       <#{DC.modified}> ?modified ."
     # TODO remove creator/contributor
     query += " }"
     query += " WHERE {"
-    query += "   <#{uri(file_name)}> a <#{NFO.FileDataObject}> ;"
+    query += "   ?uri a <#{NFO.FileDataObject}> ;"
+    query += "       <#{NFO.fileUrl}> \"#{url}\" ;"
     query += "       <#{NFO.fileName}> ?fileName ;"
     query += "       <#{DC.identifier}> ?id ;"
     query += "       <#{DC.format}> ?format ;"
     query += "       <#{NFO.fileSize}> ?fileSize ;"
-    query += "       <#{NFO.fileUrl}> ?fileUrl ;"
     query += "       <#{DC.created}> ?created ;"
     query += "       <#{DC.modified}> ?modified ."
     # TODO remove creator/contributor
