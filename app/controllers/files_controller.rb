@@ -126,10 +126,9 @@ class FilesController < ApplicationController
   private
 
   def set_config
-    @storage_location = Rails.application.config.x.file.storage_location
-    @graph = Rails.application.config.x.rdf.graph_base
-    @sparql_access_point = Rails.application.config.x.rdf.sparql_endpoint
-    @sparql_client = SPARQL::Client.new(@sparql_access_point)
+    @storage_location = ENV['MU_APPLICATION_STORAGE_LOCATION'].gsub /\/$/, ""
+    @graph = ENV['MU_APPLICATION_GRAPH'].gsub /\/$/, ""
+    @sparql_client = SPARQL::Client.new('http://localhost:8890/sparql')
   end
 
   def uri(name)
