@@ -128,7 +128,7 @@ class FilesController < ApplicationController
   def set_config
     @storage_location = ENV['MU_APPLICATION_STORAGE_LOCATION'].gsub /\/$/, ""
     @graph = ENV['MU_APPLICATION_GRAPH'].gsub /\/$/, ""
-    @sparql_client = SPARQL::Client.new('http://localhost:8890/sparql')
+    @sparql_client = SPARQL::Client.new('http://database:8890/sparql')
   end
 
   def uri(name)
