@@ -10,16 +10,16 @@ class FilesController < ApplicationController
 
     file = {}
     file[:id] = SecureRandom.uuid
-    file[:name] = "#{file[:id]}.#{uploaded_file.original_filename.split('.').last}"
+    file[:name] = "#{file[:id]}.#{uploaded_file.original_filename.split('.').last}" # uuid.extension
     file_path = file_path(file[:name])
-    file[:href] = uri(params[:project], file[:name])
+    file[:href] = uri(file[:name])
     file[:format] = uploaded_file.content_type
     File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
     file[:size] = File.size(file_path)
     now = DateTime.now.xmlschema
 
     query =  " INSERT DATA {"
-    query += "   GRAPH <#{@graph}/#{params[:project]}> {"
+    query += "   GRAPH <#{@graph}> {"
     query += "     <#{file[:href]}> a <#{NFO.FileDataObject}> ;"
     query += "         <#{NFO.fileName}> \"#{file[:name]}\" ;"
     query += "         <#{DC.identifier}> \"#{file[:id]}\" ;"
@@ -39,7 +39,7 @@ class FilesController < ApplicationController
 
   # GET /files/:id
   def show
-    query = " SELECT ?uri ?name ?format ?size FROM <#{@graph}/#{params[:project]}> WHERE {"
+    query = " SELECT ?uri ?name ?format ?size FROM <#{@graph}> WHERE {"
     query += "   ?uri <#{DC.identifier}> \"#{params[:id]}\" ;"
     query += "        <#{NFO.fileName}> ?name ;"
     query += "        <#{DC.format}> ?format ;"
@@ -62,7 +62,7 @@ class FilesController < ApplicationController
 
   # GET /files/:id/download
   def download
-    query = " SELECT ?fileUrl FROM <#{@graph}/#{params[:project]}> WHERE {"
+    query = " SELECT ?fileUrl FROM <#{@graph}> WHERE {"
     query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{DC.identifier}> \"#{params[:id]}\" ."
     query += " }"
 
@@ -75,7 +75,7 @@ class FilesController < ApplicationController
 
   # DELETE /files/:id
   def destroy
-    query = " SELECT ?fileUrl FROM <#{@graph}/#{params[:project]}> WHERE {"
+    query = " SELECT ?fileUrl FROM <#{@graph}> WHERE {"
     query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{DC.identifier}> \"#{params[:id]}\" ."
     query += " }"
 
@@ -86,7 +86,7 @@ class FilesController < ApplicationController
     path = URI(url).path
     File.delete path if File.exist? path
 
-    query =  " WITH <#{@graph}/#{params[:project]}> "
+    query =  " WITH <#{@graph}> "
     query += " DELETE {"
     query += "   ?uri a <#{NFO.FileDataObject}> ;"
     query += "       <#{NFO.fileUrl}> \"#{url}\" ;"
@@ -132,8 +132,8 @@ class FilesController < ApplicationController
     @sparql_client = SPARQL::Client.new(@sparql_access_point)
   end
 
-  def uri(project, name)
-    "#{@graph}/#{project}/documents/#{name}"
+  def uri(name)
+    "#{@graph}/files/#{name}"
   end
 
   def file_path(name)
