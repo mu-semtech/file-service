@@ -18,3 +18,5 @@
 *.iml
 /.idea
 .ruby-version
+
+*~

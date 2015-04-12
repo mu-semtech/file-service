@@ -1,10 +1,8 @@
 Rails.application.routes.draw do
 
-  scope path: ':project' do
-    resources :documents, only: [:create, :show, :destroy] do
-      member do
-        get 'download'
-      end
+  resources :files, only: [:create, :show, :destroy] do
+    member do
+      get 'download'
     end
   end
 

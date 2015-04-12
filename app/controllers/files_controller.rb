@@ -1,30 +1,30 @@
-class DocumentsController < ApplicationController
+class FilesController < ApplicationController
 
   before_action :set_config
 
   include RDF
 
-  # POST /documents
+  # POST /files
   def create
     uploaded_file = params[:file]
 
-    document = {}
-    document[:id] = SecureRandom.uuid
-    document[:name] = "#{document[:id]}.#{uploaded_file.original_filename.split('.').last}"
-    file_path = file_path(document[:name])
-    document[:href] = uri(params[:project], document[:name])
-    document[:format] = uploaded_file.content_type
+    file = {}
+    file[:id] = SecureRandom.uuid
+    file[:name] = "#{file[:id]}.#{uploaded_file.original_filename.split('.').last}"
+    file_path = file_path(file[:name])
+    file[:href] = uri(params[:project], file[:name])
+    file[:format] = uploaded_file.content_type
     File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
-    document[:size] = File.size(file_path)
+    file[:size] = File.size(file_path)
     now = DateTime.now.xmlschema
 
     query =  " INSERT DATA {"
     query += "   GRAPH <#{@graph}/#{params[:project]}> {"
-    query += "     <#{document[:href]}> a <#{NFO.FileDataObject}> ;"
-    query += "         <#{NFO.fileName}> \"#{document[:name]}\" ;"
-    query += "         <#{DC.identifier}> \"#{document[:id]}\" ;"
-    query += "         <#{DC.format}> \"#{document[:format]}\" ;"
-    query += "         <#{NFO.fileSize}> \"#{document[:size]}\"^^xsd:integer ;"
+    query += "     <#{file[:href]}> a <#{NFO.FileDataObject}> ;"
+    query += "         <#{NFO.fileName}> \"#{file[:name]}\" ;"
+    query += "         <#{DC.identifier}> \"#{file[:id]}\" ;"
+    query += "         <#{DC.format}> \"#{file[:format]}\" ;"
+    query += "         <#{NFO.fileSize}> \"#{file[:size]}\"^^xsd:integer ;"
     query += "         <#{NFO.fileUrl}> \"file://#{file_path}\" ;"
     query += "         <#{DC.created}> \"#{now}\"^^xsd:dateTime ;"
     query += "         <#{DC.modified}> \"#{now}\"^^xsd:dateTime ."
@@ -34,10 +34,10 @@ class DocumentsController < ApplicationController
 
     @sparql_client.update(query)
 
-    render json: { :document => document }, status: :ok
+    render json: { :file => file }, status: :ok
   end
 
-  # GET /documents/:id
+  # GET /files/:id
   def show
     query = " SELECT ?uri ?name ?format ?size FROM <#{@graph}/#{params[:project]}> WHERE {"
     query += "   ?uri <#{DC.identifier}> \"#{params[:id]}\" ;"
@@ -49,18 +49,18 @@ class DocumentsController < ApplicationController
     result = @sparql_client.query(query)
     raise ActionController::MissingFile if result.empty?
 
-    document = {}
+    file = {}
     result = result.first
-    document[:href] = result[:uri].value
-    document[:name] = result[:name].value
-    document[:id] = params[:id]
-    document[:format] = result[:format].value
-    document[:size] = result[:size].value
+    file[:href] = result[:uri].value
+    file[:name] = result[:name].value
+    file[:id] = params[:id]
+    file[:format] = result[:format].value
+    file[:size] = result[:size].value
 
-    render json: { :document => document }, status: :ok
+    render json: { :file => file }, status: :ok
   end
 
-  # GET /documents/:id/download
+  # GET /files/:id/download
   def download
     query = " SELECT ?fileUrl FROM <#{@graph}/#{params[:project]}> WHERE {"
     query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{DC.identifier}> \"#{params[:id]}\" ."
@@ -73,7 +73,7 @@ class DocumentsController < ApplicationController
     send_file URI(url).path, disposition: 'attachment'
   end
 
-  # DELETE /documents/:id
+  # DELETE /files/:id
   def destroy
     query = " SELECT ?fileUrl FROM <#{@graph}/#{params[:project]}> WHERE {"
     query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{DC.identifier}> \"#{params[:id]}\" ."
