@@ -8,7 +8,7 @@ File manager microservice to store files and their file-specific metadata
         -v /path/to/storage:/home/app/storage \
         -e MU_APPLICATION_GRAPH=http://mu.semte.ch/app \
         -e SECRET_KEY_BASE=my-secret-production-key-for-rails \ 
-        -d semtech/file-manager
+        -d semtech/mu-file-manager
 
 The triple store used in the backend is linked to the file manager service container as `database`. Make sure the file manager service is able to execute update queries against this store.
 
