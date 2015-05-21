@@ -12,7 +12,7 @@ class FilesController < ApplicationController
     file[:id] = SecureRandom.uuid
     file[:name] = "#{file[:id]}.#{uploaded_file.original_filename.split('.').last}" # uuid.extension
     file_path = file_path(file[:name])
-    file[:href] = uri(file[:name])
+    file[:href] = "#{request.headers['X-Rewrite-URL'].chomp '/'}/#{file[:name]}" 
     file[:format] = uploaded_file.content_type
     File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
     file[:size] = File.size(file_path)
@@ -122,17 +122,12 @@ class FilesController < ApplicationController
   end
 
 
-
   private
 
   def set_config
     @storage_location = ENV['MU_APPLICATION_STORAGE_LOCATION'].gsub /\/$/, ""
     @graph = ENV['MU_APPLICATION_GRAPH'].gsub /\/$/, ""
     @sparql_client = SPARQL::Client.new('http://database:8890/sparql')
-  end
-
-  def uri(name)
-    "#{@graph}/files/#{name}"
   end
 
   def file_path(name)
