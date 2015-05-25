@@ -8,23 +8,22 @@ class FilesController < ApplicationController
   def create
     uploaded_file = params[:file]
 
-    file = {}
-    file[:id] = SecureRandom.uuid
-    file[:name] = "#{file[:id]}.#{uploaded_file.original_filename.split('.').last}" # uuid.extension
-    file_path = file_path(file[:name])
-    file[:href] = "#{request.headers['X-Rewrite-URL'].chomp '/'}/#{file[:name]}" 
-    file[:format] = uploaded_file.content_type
+    file = { type: "files", id: SecureRandom.uuid, attributes: {}, links: {} }
+    file[:attributes][:name] = "#{file[:id]}.#{uploaded_file.original_filename.split('.').last}" # uuid.extension
+    file_path = file_path(file[:attributes][:name])
+    file[:links][:self] = "#{request.headers['X-Rewrite-URL'].chomp '/'}/#{file[:id]}" 
+    file[:attributes][:format] = uploaded_file.content_type
     File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
-    file[:size] = File.size(file_path)
+    file[:attributes][:size] = File.size(file_path)
     now = DateTime.now.xmlschema
 
     query =  " INSERT DATA {"
     query += "   GRAPH <#{@graph}> {"
-    query += "     <#{file[:href]}> a <#{NFO.FileDataObject}> ;"
-    query += "         <#{NFO.fileName}> \"#{file[:name]}\" ;"
+    query += "     <#{file[:links][:self]}> a <#{NFO.FileDataObject}> ;"
+    query += "         <#{NFO.fileName}> \"#{file[:attributes][:name]}\" ;"
     query += "         <#{DC.identifier}> \"#{file[:id]}\" ;"
-    query += "         <#{DC.format}> \"#{file[:format]}\" ;"
-    query += "         <#{NFO.fileSize}> \"#{file[:size]}\"^^xsd:integer ;"
+    query += "         <#{DC.format}> \"#{file[:attributes][:format]}\" ;"
+    query += "         <#{NFO.fileSize}> \"#{file[:attributes][:size]}\"^^xsd:integer ;"
     query += "         <#{NFO.fileUrl}> \"file://#{file_path}\" ;"
     query += "         <#{DC.created}> \"#{now}\"^^xsd:dateTime ;"
     query += "         <#{DC.modified}> \"#{now}\"^^xsd:dateTime ."
@@ -34,7 +33,7 @@ class FilesController < ApplicationController
 
     @sparql_client.update(query)
 
-    render json: { :file => file }, status: :ok
+    render json: { :data => file }, status: :created
   end
 
   # GET /files/:id
@@ -49,15 +48,14 @@ class FilesController < ApplicationController
     result = @sparql_client.query(query)
     raise ActionController::MissingFile if result.empty?
 
-    file = {}
     result = result.first
-    file[:href] = result[:uri].value
-    file[:name] = result[:name].value
-    file[:id] = params[:id]
-    file[:format] = result[:format].value
-    file[:size] = result[:size].value
+    file = { type: "files", id: params[:id], attributes: {}, links: {} }
+    file[:links][:self] = request.headers['X-Rewrite-URL']
+    file[:attributes][:name] = result[:name].value
+    file[:attributes][:format] = result[:format].value
+    file[:attributes][:size] = result[:size].value
 
-    render json: { :file => file }, status: :ok
+    render json: { :data => file }, status: :ok
   end
 
   # GET /files/:id/download
