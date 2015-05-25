@@ -6,6 +6,10 @@ class FilesController < ApplicationController
 
   # POST /files
   def create
+
+    raise ArgumentError, 'File parameter is required.' if params[:file].blank?
+    raise ArgumentError, 'X-Rewrite-URL header is missing.' if request.headers['X-Rewrite-URL'].blank?
+
     uploaded_file = params[:file]
 
     file = { type: "files", id: SecureRandom.uuid, attributes: {}, links: {} }
@@ -38,6 +42,9 @@ class FilesController < ApplicationController
 
   # GET /files/:id
   def show
+
+    raise ArgumentError 'X-Rewrite-URL header is missing.' if request.headers['X-Rewrite-URL'].blank?
+
     query = " SELECT ?uri ?name ?format ?size FROM <#{@graph}> WHERE {"
     query += "   ?uri <#{MU.uuid}> \"#{params[:id]}\" ;"
     query += "        <#{NFO.fileName}> ?name ;"
@@ -116,7 +123,11 @@ class FilesController < ApplicationController
   # Exception handling
 
   rescue_from ActionController::MissingFile do |e|
-    render json: { status: 'Not found' }, status: :not_found
+    render json: { errors: [{ title: 'File not found.' }] }, status: :not_found
+  end
+
+  rescue_from ArgumentError do |e|
+    render json: { errors: [{ title: e.message }] }, status: :bad_request
   end
 
 
