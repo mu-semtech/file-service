@@ -21,7 +21,7 @@ class FilesController < ApplicationController
     query += "   GRAPH <#{@graph}> {"
     query += "     <#{file[:links][:self]}> a <#{NFO.FileDataObject}> ;"
     query += "         <#{NFO.fileName}> \"#{file[:attributes][:name]}\" ;"
-    query += "         <#{DC.identifier}> \"#{file[:id]}\" ;"
+    query += "         <#{MU.uuid}> \"#{file[:id]}\" ;"
     query += "         <#{DC.format}> \"#{file[:attributes][:format]}\" ;"
     query += "         <#{NFO.fileSize}> \"#{file[:attributes][:size]}\"^^xsd:integer ;"
     query += "         <#{NFO.fileUrl}> \"file://#{file_path}\" ;"
@@ -39,7 +39,7 @@ class FilesController < ApplicationController
   # GET /files/:id
   def show
     query = " SELECT ?uri ?name ?format ?size FROM <#{@graph}> WHERE {"
-    query += "   ?uri <#{DC.identifier}> \"#{params[:id]}\" ;"
+    query += "   ?uri <#{MU.uuid}> \"#{params[:id]}\" ;"
     query += "        <#{NFO.fileName}> ?name ;"
     query += "        <#{DC.format}> ?format ;"
     query += "        <#{NFO.fileSize}> ?size ."
@@ -61,7 +61,7 @@ class FilesController < ApplicationController
   # GET /files/:id/download
   def download
     query = " SELECT ?fileUrl FROM <#{@graph}> WHERE {"
-    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{DC.identifier}> \"#{params[:id]}\" ."
+    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{MU.uuid}> \"#{params[:id]}\" ."
     query += " }"
 
     result = @sparql_client.query(query)
@@ -74,7 +74,7 @@ class FilesController < ApplicationController
   # DELETE /files/:id
   def destroy
     query = " SELECT ?fileUrl FROM <#{@graph}> WHERE {"
-    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{DC.identifier}> \"#{params[:id]}\" ."
+    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{MU.uuid}> \"#{params[:id]}\" ."
     query += " }"
 
     result = @sparql_client.query(query)
@@ -89,7 +89,7 @@ class FilesController < ApplicationController
     query += "   ?uri a <#{NFO.FileDataObject}> ;"
     query += "       <#{NFO.fileUrl}> \"#{url}\" ;"
     query += "       <#{NFO.fileName}> ?fileName ;"
-    query += "       <#{DC.identifier}> ?id ;"
+    query += "       <#{MU.uuid}> ?id ;"
     query += "       <#{DC.format}> ?format ;"
     query += "       <#{NFO.fileSize}> ?fileSize ;"
     query += "       <#{DC.created}> ?created ;"
@@ -100,7 +100,7 @@ class FilesController < ApplicationController
     query += "   ?uri a <#{NFO.FileDataObject}> ;"
     query += "       <#{NFO.fileUrl}> \"#{url}\" ;"
     query += "       <#{NFO.fileName}> ?fileName ;"
-    query += "       <#{DC.identifier}> ?id ;"
+    query += "       <#{MU.uuid}> ?id ;"
     query += "       <#{DC.format}> ?format ;"
     query += "       <#{NFO.fileSize}> ?fileSize ;"
     query += "       <#{DC.created}> ?created ;"
