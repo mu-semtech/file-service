@@ -8,7 +8,7 @@ RUN mkdir -p /home/app/storage \
 
 ADD . /home/app/webapp
 
-RUN mv /home/app/webapp/startup.sh /etc/my_init.d/file-manager-startup.sh \
+RUN mv /home/app/webapp/startup.sh /etc/my_init.d/file-service-startup.sh \
         && chmod +x /etc/my_init.d/*.sh
 
 VOLUME /home/app/storage
