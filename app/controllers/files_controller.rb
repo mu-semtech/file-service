@@ -6,9 +6,10 @@ class FilesController < ApplicationController
 
   # POST /files
   def create
-
+    raise ActiveModel::ForbiddenAttributesError, 'Id paramater is not allowed.' if not params[:id].blank?
     raise ArgumentError, 'File parameter is required.' if params[:file].blank?
     raise ArgumentError, 'X-Rewrite-URL header is missing.' if request.headers['X-Rewrite-URL'].blank?
+    
 
     uploaded_file = params[:file]
 
@@ -37,7 +38,7 @@ class FilesController < ApplicationController
 
     @sparql_client.update(query)
 
-    render json: { :data => file }, status: :created
+    render json: { :data => file }, content_type: 'application/vnd.api+json', status: :created
   end
 
   # GET /files/:id
@@ -62,7 +63,7 @@ class FilesController < ApplicationController
     file[:attributes][:format] = result[:format].value
     file[:attributes][:size] = result[:size].value
 
-    render json: { :data => file }, status: :ok
+    render json: { :data => file }, content_type: 'application/vnd.api+json', status: :ok
   end
 
   # GET /files/:id/download
@@ -128,6 +129,10 @@ class FilesController < ApplicationController
 
   rescue_from ArgumentError do |e|
     render json: { errors: [{ title: e.message }] }, status: :bad_request
+  end
+
+  rescue_from ActiveModel::ForbiddenAttributesError do |e|
+    render json: { errors: [{ title: e.message }] }, status: :forbidden
   end
 
 
