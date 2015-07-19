@@ -13,18 +13,18 @@ class FilesController < ApplicationController
 
     uploaded_file = params[:file]
 
-    file = { type: "files", id: SecureRandom.uuid, attributes: {}, links: {} }
+    file = { type: "files", id: SecureRandom.uuid, attributes: {} }
     file[:attributes][:name] = "#{file[:id]}.#{uploaded_file.original_filename.split('.').last}" # uuid.extension
     file_path = file_path(file[:attributes][:name])
-    file[:links][:self] = "#{request.headers['X-Rewrite-URL'].chomp '/'}/#{file[:id]}" 
     file[:attributes][:format] = uploaded_file.content_type
     File.open(file_path, 'wb') { |f| f.write(uploaded_file.read) }
     file[:attributes][:size] = File.size(file_path)
+    links = { self: "#{request.headers['X-Rewrite-URL'].chomp '/'}/#{file[:id]}" }
     now = DateTime.now.xmlschema
 
     query =  " INSERT DATA {"
     query += "   GRAPH <#{@graph}> {"
-    query += "     <#{file[:links][:self]}> a <#{NFO.FileDataObject}> ;"
+    query += "     <#{links[:self]}> a <#{NFO.FileDataObject}> ;"
     query += "         <#{NFO.fileName}> \"#{file[:attributes][:name]}\" ;"
     query += "         <#{MU.uuid}> \"#{file[:id]}\" ;"
     query += "         <#{DC.format}> \"#{file[:attributes][:format]}\" ;"
@@ -38,7 +38,7 @@ class FilesController < ApplicationController
 
     @sparql_client.update(query)
 
-    render json: { :data => file }, content_type: 'application/vnd.api+json', status: :created
+    render json: { :data => file, :links => links }, content_type: 'application/vnd.api+json', status: :created
   end
 
   # GET /files/:id
@@ -57,13 +57,13 @@ class FilesController < ApplicationController
     raise ActionController::MissingFile if result.empty?
 
     result = result.first
-    file = { type: "files", id: params[:id], attributes: {}, links: {} }
-    file[:links][:self] = request.headers['X-Rewrite-URL']
+    file = { type: "files", id: params[:id], attributes: {} }
+    links = { self: request.headers['X-Rewrite-URL'] }
     file[:attributes][:name] = result[:name].value
     file[:attributes][:format] = result[:format].value
     file[:attributes][:size] = result[:size].value
 
-    render json: { :data => file }, content_type: 'application/vnd.api+json', status: :ok
+    render json: { :data => file, :links => links }, content_type: 'application/vnd.api+json', status: :ok
   end
 
   # GET /files/:id/download
