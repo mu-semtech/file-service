@@ -8,7 +8,10 @@ RUN mkdir -p /home/app/storage \
 
 ADD . /home/app/webapp
 
-RUN mv /home/app/webapp/startup.sh /etc/my_init.d/file-service-startup.sh \
-        && chmod +x /etc/my_init.d/*.sh
+RUN cd /home/app/webapp \
+    && bundle install --deployment --without development test \
+    && RAILS_ENV=production bundle exec rake assets:precompile \
+    && mv /home/app/webapp/startup.sh /etc/my_init.d/file-service-startup.sh \
+    && chmod +x /etc/my_init.d/*.sh
 
 VOLUME /home/app/storage
