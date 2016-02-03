@@ -26,7 +26,7 @@ class FilesController < ApplicationController
     query += "   GRAPH <#{@graph}> {"
     query += "     <#{links[:self]}> a <#{NFO.FileDataObject}> ;"
     query += "         <#{NFO.fileName}> \"#{file[:attributes][:name]}\" ;"
-    query += "         <#{MU.uuid}> \"#{file[:id]}\" ;"
+    query += "         <#{MU_CORE.uuid}> \"#{file[:id]}\" ;"
     query += "         <#{DC.format}> \"#{file[:attributes][:format]}\" ;"
     query += "         <#{NFO.fileSize}> \"#{file[:attributes][:size]}\"^^xsd:integer ;"
     query += "         <#{NFO.fileUrl}> \"file://#{file_path}\" ;"
@@ -47,7 +47,7 @@ class FilesController < ApplicationController
     raise ArgumentError 'X-Rewrite-URL header is missing.' if request.headers['X-Rewrite-URL'].blank?
 
     query = " SELECT ?uri ?name ?format ?size FROM <#{@graph}> WHERE {"
-    query += "   ?uri <#{MU.uuid}> \"#{params[:id]}\" ;"
+    query += "   ?uri <#{MU_CORE.uuid}> \"#{params[:id]}\" ;"
     query += "        <#{NFO.fileName}> ?name ;"
     query += "        <#{DC.format}> ?format ;"
     query += "        <#{NFO.fileSize}> ?size ."
@@ -69,7 +69,7 @@ class FilesController < ApplicationController
   # GET /files/:id/download
   def download
     query = " SELECT ?fileUrl FROM <#{@graph}> WHERE {"
-    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{MU.uuid}> \"#{params[:id]}\" ."
+    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{MU_CORE.uuid}> \"#{params[:id]}\" ."
     query += " }"
 
     result = @sparql_client.query(query)
@@ -82,7 +82,7 @@ class FilesController < ApplicationController
   # DELETE /files/:id
   def destroy
     query = " SELECT ?fileUrl FROM <#{@graph}> WHERE {"
-    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{MU.uuid}> \"#{params[:id]}\" ."
+    query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{MU_CORE.uuid}> \"#{params[:id]}\" ."
     query += " }"
 
     result = @sparql_client.query(query)
@@ -97,7 +97,7 @@ class FilesController < ApplicationController
     query += "   ?uri a <#{NFO.FileDataObject}> ;"
     query += "       <#{NFO.fileUrl}> \"#{url}\" ;"
     query += "       <#{NFO.fileName}> ?fileName ;"
-    query += "       <#{MU.uuid}> ?id ;"
+    query += "       <#{MU_CORE.uuid}> ?id ;"
     query += "       <#{DC.format}> ?format ;"
     query += "       <#{NFO.fileSize}> ?fileSize ;"
     query += "       <#{DC.created}> ?created ;"
@@ -108,7 +108,7 @@ class FilesController < ApplicationController
     query += "   ?uri a <#{NFO.FileDataObject}> ;"
     query += "       <#{NFO.fileUrl}> \"#{url}\" ;"
     query += "       <#{NFO.fileName}> ?fileName ;"
-    query += "       <#{MU.uuid}> ?id ;"
+    query += "       <#{MU_CORE.uuid}> ?id ;"
     query += "       <#{DC.format}> ?format ;"
     query += "       <#{NFO.fileSize}> ?fileSize ;"
     query += "       <#{DC.created}> ?created ;"
