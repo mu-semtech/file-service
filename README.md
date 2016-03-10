@@ -10,7 +10,7 @@ File microservice to store files and their file-specific metadata
         -e SECRET_KEY_BASE=my-secret-production-key-for-rails \ 
         -d semtech/mu-file-service
 
-The triple store used in the backend is linked to the file service container as `database`. Make sure the file service is able to execute update queries against this store.
+The triple store used in the backend is linked to the login service container as `database`. If you configure another SPARQL endpoint URL through `MU_SPARQL_ENDPOINT` update the link name accordingly. Make sure the login service is able to execute update queries against this store.
 
 The file service stores the files in the mounted volume `/home/app/storage`.
 
