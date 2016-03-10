@@ -14,6 +14,6 @@ The triple store used in the backend is linked to the login service container as
 
 The file service stores the files in the mounted volume `/home/app/storage`.
 
-The `MU_APPLICATION_GRAPH` environment variable specifies the graph in the triple store the file service will work in.
+The `MU_APPLICATION_GRAPH` environment variable (default: `http://mu.semte.ch/application`) specifies the graph in the triple store the login service will work in.
 
 The `SECRET_KEY_BASE` environment variable is used by Rails to verify the integrity of signed cookies.

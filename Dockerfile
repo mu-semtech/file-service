@@ -1,6 +1,7 @@
 FROM erikap/passenger-rails
 
 ENV MU_SPARQL_ENDPOINT http://database:8890/sparql
+ENV MU_APPLICATION_GRAPH http://mu.semte.ch/application
 ENV MU_APPLICATION_STORAGE_LOCATION /home/app/storage
 
 RUN mkdir -p /home/app/storage \
