@@ -10,7 +10,7 @@ RUN mkdir -p /home/app/storage \
         && echo "env MU_APPLICATION_GRAPH;\n" >> /etc/nginx/main.d/rails-env.conf \
         && echo "chunked_transfer_encoding off;\n" >> /etc/nginx/conf.d/webapp.conf
 
-ADD . /home/app/webapp
+COPY . /home/app/webapp
 
 RUN cd /home/app/webapp \
     && bundle install --deployment --without development test \
