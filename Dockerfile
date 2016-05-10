@@ -9,8 +9,7 @@ RUN mkdir -p /data \
         && echo "env MU_APPLICATION_STORAGE_LOCATION;\n" >> /etc/nginx/main.d/rails-env.conf \
         && echo "env MU_SPARQL_ENDPOINT;\n" >> /etc/nginx/main.d/rails-env.conf \
         && echo "env MU_APPLICATION_GRAPH;\n" >> /etc/nginx/main.d/rails-env.conf \
-        && echo "chunked_transfer_encoding off;\n" >> /etc/nginx/conf.d/webapp.conf \
-        && echo "client_max_body_size ${MU_APPLICATION_MAX_FILE_SIZE};\n" >> /etc/nginx/conf.d/webapp.conf
+        && echo "chunked_transfer_encoding off;\n" >> /etc/nginx/conf.d/webapp.conf
 
 COPY . /home/app/webapp
 
