@@ -2,10 +2,10 @@ FROM erikap/passenger-rails
 
 ENV MU_SPARQL_ENDPOINT http://database:8890/sparql
 ENV MU_APPLICATION_GRAPH http://mu.semte.ch/application
-ENV MU_APPLICATION_STORAGE_LOCATION /home/app/storage
+ENV MU_APPLICATION_STORAGE_LOCATION /data
 ENV MU_APPLICATION_MAX_FILE_SIZE 20M
 
-RUN mkdir -p /home/app/storage \
+RUN mkdir -p /data \
         && echo "env MU_APPLICATION_STORAGE_LOCATION;\n" >> /etc/nginx/main.d/rails-env.conf \
         && echo "env MU_SPARQL_ENDPOINT;\n" >> /etc/nginx/main.d/rails-env.conf \
         && echo "env MU_APPLICATION_GRAPH;\n" >> /etc/nginx/main.d/rails-env.conf \
@@ -19,4 +19,4 @@ RUN cd /home/app/webapp \
     && mv /home/app/webapp/startup.sh /etc/my_init.d/file-service-startup.sh \
     && chmod +x /etc/my_init.d/*.sh
 
-VOLUME /home/app/storage
+VOLUME /data
