@@ -66,7 +66,7 @@ class FilesController < ApplicationController
     render json: { :data => file, :links => links }, content_type: 'application/vnd.api+json', status: :ok
   end
 
-  # GET /files/:id/download
+  # GET /files/:id/download?name=foo.pdf
   def download
     query = " SELECT ?fileUrl FROM <#{@graph}> WHERE {"
     query += "   ?uri <#{NFO.fileUrl}> ?fileUrl ; <#{MU_CORE.uuid}> \"#{params[:id]}\" ."
@@ -75,8 +75,12 @@ class FilesController < ApplicationController
     result = @sparql_client.query(query)
     raise ActionController::MissingFile if result.empty?
     url = result.first[:fileUrl].value
+    path = URI(url).path
 
-    send_file URI(url).path, disposition: 'attachment'
+    filename = params[:name]
+    filename ||= File.basename(path)
+
+    send_file path, disposition: 'attachment', filename: filename
   end
 
   # DELETE /files/:id
