@@ -14,6 +14,7 @@ class FilesController < ApplicationController
     uploaded_file = params[:file]
 
     file = { type: "files", id: SecureRandom.uuid, attributes: {} }
+    file_uri = FILE_SERVICE_RESOURCE_BASE + 'files/' + file[:id]
     file[:attributes][:name] = "#{file[:id]}.#{uploaded_file.original_filename.split('.').last}" # uuid.extension
     file_path = file_path(file[:attributes][:name])
     file[:attributes][:format] = uploaded_file.content_type
@@ -24,7 +25,7 @@ class FilesController < ApplicationController
 
     query =  " INSERT DATA {"
     query += "   GRAPH <#{@graph}> {"
-    query += "     <#{links[:self]}> a <#{NFO.FileDataObject}> ;"
+    query += "     <#{file_uri}> a <#{NFO.FileDataObject}> ;"
     query += "         <#{NFO.fileName}> \"#{file[:attributes][:name]}\" ;"
     query += "         <#{MU_CORE.uuid}> \"#{file[:id]}\" ;"
     query += "         <#{DC.format}> \"#{file[:attributes][:format]}\" ;"
