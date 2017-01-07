@@ -5,11 +5,12 @@ ENV MU_APPLICATION_GRAPH http://mu.semte.ch/application
 ENV MU_APPLICATION_STORAGE_LOCATION /data
 ENV MU_APPLICATION_MAX_FILE_SIZE 20M
 
+ENV STREAMING "false"
+
 RUN mkdir -p /data \
         && echo "env MU_APPLICATION_STORAGE_LOCATION;\n" >> /etc/nginx/main.d/rails-env.conf \
         && echo "env MU_SPARQL_ENDPOINT;\n" >> /etc/nginx/main.d/rails-env.conf \
-        && echo "env MU_APPLICATION_GRAPH;\n" >> /etc/nginx/main.d/rails-env.conf \
-        && echo "chunked_transfer_encoding off;\n" >> /etc/nginx/conf.d/webapp.conf
+        && echo "env MU_APPLICATION_GRAPH;\n" >> /etc/nginx/main.d/rails-env.conf
 
 COPY . /home/app/webapp
 
