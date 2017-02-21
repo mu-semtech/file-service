@@ -20,3 +20,18 @@ The `SECRET_KEY_BASE` environment variable is used by Rails to verify the integr
 
 By default chunked encoding is disabled. It can be enabled by setting the environment variable `STREAMING` to `'true'`. Streaming support is only available for [mu-identifier](https://github.com/mu-semtech/mu-identifier) >= 1.1.0 and [mu-dispatcher](https://github.com/mu-semtech/mu-dispatcher) >= 1.1.0.
 
+## API
+
+* POST /files
+
+* GET /files/:id
+
+* GET /files/:id/download?name=foo.pdf
+
+* DELETE /files/:id
+
+## Examples
+* To upload a file (assuming the service is running on localhost:80)
+```
+curl -i -X POST -H "Content-Type: multipart/form-data" -F "file=@/a/file.somewhere" http://localhost/files
+```
