@@ -5,8 +5,6 @@ ENV MU_APPLICATION_GRAPH http://mu.semte.ch/application
 ENV MU_APPLICATION_STORAGE_LOCATION /data
 ENV MU_APPLICATION_MAX_FILE_SIZE 20M
 
-ENV STREAMING "true"
-
 RUN mkdir -p /data 
 
 COPY . /home/app/webapp
