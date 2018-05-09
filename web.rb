@@ -8,12 +8,12 @@ if ENV['MU_APPLICATION_FILE_STORAGE_PATH'] and ENV['MU_APPLICATION_FILE_STORAGE_
   log.fatal "MU_APPLICATION_FILE_STORAGE_PATH (#{ENV['MU_APPLICATION_FILE_STORAGE_PATH']}) must be relative"
   exit
 else
-  FileUtils.mkdir_p "/shared/#{ENV['MU_APPLICATION_FILE_STORAGE_PATH']}"
+  FileUtils.mkdir_p "/share/#{ENV['MU_APPLICATION_FILE_STORAGE_PATH']}"
 end
 
 configure do
   set :relative_storage_path, (ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '').chomp('/')
-  set :storage_path, "/shared/#{(ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '')}".chomp('/')
+  set :storage_path, "/share/#{(ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '')}".chomp('/')
 end
 
 file_magic = FileMagic.new(FileMagic::MAGIC_MIME)
@@ -222,13 +222,13 @@ end
 # Helpers
 ###
 def shared_uri_to_path(uri)
-  uri.sub('shared://', '/shared/')
+  uri.sub('share://', '/share/')
 end
 
 def file_to_shared_uri(file_name)
   if settings.relative_storage_path and not settings.relative_storage_path.empty?
-    return "shared://#{settings.relative_storage_path}/#{file_name}"
+    return "share://#{settings.relative_storage_path}/#{file_name}"
   else
-    return "shared://#{file_name}"
+    return "share://#{file_name}"
   end
 end
