@@ -35,7 +35,7 @@ FILE_SERVICE_RESOURCE_BASE = 'http://mu.semte.ch/services/file-service'
 # the uploaded file and one representing the persisted file on disk generated from the upload.
 #
 # Accepts multipart/form-data with a 'file' parameter containing the file to upload
-# 
+#
 # Returns 201 on successful upload of the file
 #         400 if X-Rewrite header is missing
 #             if file param is missing
@@ -50,7 +50,7 @@ post '/files/?' do
   upload_resource_uuid = generate_uuid()
   upload_resource_name = params['file'][:filename]
   upload_resource_uri = "#{FILE_SERVICE_RESOURCE_BASE}/files/#{upload_resource_uuid}"
-  
+
   file_format = file_magic.file(tempfile.path)
   file_extension = upload_resource_name.split('.').last
   file_size = File.size(tempfile.path)
@@ -58,7 +58,7 @@ post '/files/?' do
   file_resource_uuid = generate_uuid()
   file_resource_name = "#{file_resource_uuid}.#{file_extension}"
   file_resource_uri = file_to_shared_uri(file_resource_name)
-    
+
   now = DateTime.now
 
   FileUtils.copy(tempfile.path, "#{settings.storage_path}/#{file_resource_name}")
@@ -79,7 +79,7 @@ post '/files/?' do
   query += "         <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape} ;"
   query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
   query += "         <#{NFO.fileSize}> #{sparql_escape_int(file_size)} ;"
-  query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"  
+  query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"
   query += "         <#{DC.created}> #{now.sparql_escape} ;"
   query += "         <#{DC.modified}> #{now.sparql_escape} ."
   query += "   }"
@@ -120,7 +120,7 @@ get '/files/:id' do
   query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(params['id'])} ;"
   query += "        <#{NFO.fileName}> ?name ;"
   query += "        <#{DC.format}> ?format ;"
-  query += "        <#{DBPEDIA.fileExtension}> ?extension ;"    
+  query += "        <#{DBPEDIA.fileExtension}> ?extension ;"
   query += "        <#{NFO.fileSize}> ?size ."
   query += " }"
   result = query(query)
@@ -163,7 +163,7 @@ get '/files/:id/download' do
   result = query(query)
 
   return status 404 if result.empty?
-  
+
   url = result.first[:fileUrl].value
   path = shared_uri_to_path(url)
 
@@ -189,28 +189,29 @@ delete '/files/:id' do
 
   return status 404 if result.empty?
 
-  query =  " WITH <#{graph}> "
-  query += " DELETE WHERE {"
-  query += "   <#{result.first[:uri]}> a <#{NFO.FileDataObject}> ;"
+  query =  " DELETE WHERE {"
+  query += "   GRAPH <#{graph}> {"
+  query += "     <#{result.first[:uri]}> a <#{NFO.FileDataObject}> ;"
   query += "       <#{NFO.fileName}> ?upload_name ;"
   query += "       <#{MU_CORE.uuid}> ?upload_id ;"
   query += "       <#{DC.format}> ?upload_format ;"
-  query += "       <#{DBPEDIA.fileExtension}> ?upload_extension ;"  
+  query += "       <#{DBPEDIA.fileExtension}> ?upload_extension ;"
   query += "       <#{NFO.fileSize}> ?upload_size ;"
   query += "       <#{DC.created}> ?upload_created ;"
   query += "       <#{DC.modified}> ?upload_modified ."
-  query += "   <#{result.first[:fileUrl]}> a <#{NFO.FileDataObject}> ;"
-  query += "       <#{NIE.dataSource}> <#{result.first[:uri]}> ;"  
+  query += "     <#{result.first[:fileUrl]}> a <#{NFO.FileDataObject}> ;"
+  query += "       <#{NIE.dataSource}> <#{result.first[:uri]}> ;"
   query += "       <#{NFO.fileName}> ?fileName ;"
   query += "       <#{MU_CORE.uuid}> ?id ;"
   query += "       <#{DC.format}> ?format ;"
-  query += "       <#{DBPEDIA.fileExtension}> ?extension ;"  
+  query += "       <#{DBPEDIA.fileExtension}> ?extension ;"
   query += "       <#{NFO.fileSize}> ?size ;"
   query += "       <#{DC.created}> ?created ;"
   query += "       <#{DC.modified}> ?modified ."
+  query += "   }"
   query += " }"
   update(query)
-  
+
   url = result.first[:fileUrl].value
   path = shared_uri_to_path(url)
   File.delete path if File.exist? path
