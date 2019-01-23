@@ -124,15 +124,15 @@ The file service represents an uploaded file as 2 resources in the triplestore: 
 
 The uploaded file resource is of type `nfo:FileDataObject` and has the following properties:
 * `nfo:fileName` (string): name of the uploaded file
-* `dct:format` (int): MIME-type of the file
-* `nfo:fileSize` (string): size of the file in bytes
+* `dct:format` (string): MIME-type of the file
+* `nfo:fileSize` (int): size of the file in bytes
 * `dbpedia:fileExtension` (string): extension of the file
 * `dct:created` (datetime): upload datetime
 
 The resource representing the stored file is of type `nfo:FileDataObject` and has the following properties:
 * `nfo:fileName` (string): name of the file as stored on disk
-* `dct:format` (int): MIME-type of the file
-* `nfo:fileSize` (string): size of the file in bytes
+* `dct:format` (string): MIME-type of the file
+* `nfo:fileSize` (int): size of the file in bytes
 * `dbpedia:fileExtension` (string): extension of the file
 * `dct:created` (datetime): storage datetime
 * `nie:dataSource` (nfo:FileDataObject): uploaded file this file originates from
