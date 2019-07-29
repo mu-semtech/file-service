@@ -145,7 +145,7 @@ If you want to model the files of the file service in the domain of your [mu-cl-
 ```lisp
 (define-resource file ()
   :class (s-prefix "nfo:FileDataObject")
-  :properties `((:filename :string ,(s-prefix "nfo:fileName"))
+  :properties `((:name :string ,(s-prefix "nfo:fileName"))
                 (:format :string ,(s-prefix "dct:format"))
                 (:size :number ,(s-prefix "nfo:fileSize"))
                 (:extension :string ,(s-prefix "dbpedia:fileExtension"))
