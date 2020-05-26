@@ -169,8 +169,15 @@ get '/files/:id/download' do
 
   filename = params['name']
   filename ||= File.basename(path)
-
-  send_file path, disposition: 'attachment', filename: filename
+  if File.file?(filename)
+    send_file path, disposition: 'attachment', filename: filename
+  else
+    content_type 'application/json'
+    status 500
+    {
+      error: 'File not found in path'
+    }.to_json
+  end
 end
 
 ###
