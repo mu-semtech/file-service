@@ -174,9 +174,7 @@ get '/files/:id/download' do
   else
     content_type 'application/json'
     status 500
-    {
-      error: 'File not found in path'
-    }.to_json
+    { status: "404", title: "Not found", detail: "Could not find file in path" }.to_json
   end
 end
 
