@@ -154,6 +154,7 @@ end
 #
 # Returns 200 with the file content as attachment
 #         404 if a file with the given id cannot be found
+#         500 if the file is available in the database but not on disk
 ###
 get '/files/:id/download' do
   query = " SELECT ?fileUrl FROM <#{graph}> WHERE {"
@@ -174,7 +175,7 @@ get '/files/:id/download' do
   else
     content_type 'application/json'
     status 500
-    { status: "404", title: "Not found", detail: "Could not find file in path" }.to_json
+    { status: "500", title: "Internal server error", detail: "Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint." }.to_json
   end
 end
 
