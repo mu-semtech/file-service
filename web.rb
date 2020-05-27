@@ -175,7 +175,11 @@ get '/files/:id/download' do
   else
     content_type 'application/json'
     status 500
-    { status: "500", title: "Internal server error", detail: "Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint." }.to_json
+    {
+      status: "500",
+      title: "Internal server error",
+      detail: "Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint."
+    }.to_json
   end
 end
 
