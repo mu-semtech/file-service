@@ -170,7 +170,7 @@ get '/files/:id/download' do
 
   filename = params['name']
   filename ||= File.basename(path)
-  if File.file?(filename)
+  if File.file?(path)
     send_file path, disposition: 'attachment', filename: filename
   else
     content_type 'application/json'
