@@ -173,13 +173,7 @@ get '/files/:id/download' do
   if File.file?(path)
     send_file path, disposition: 'attachment', filename: filename
   else
-    content_type 'application/json'
-    status 500
-    {
-      status: "500",
-      title: "Internal server error",
-      detail: "Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint."
-    }.to_json
+    error("Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint.", 500)
   end
 end
 
