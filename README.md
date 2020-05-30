@@ -105,12 +105,26 @@ Download the content of the file with the given id.
 ##### Query paramaters
 * `name` (optional): name for the downloaded file (e.g. `/files/1/download?name=report.pdf`)
 
+##### Response
+
+###### 200 Ok
+Expected response, the file is returned.
+
+###### 404 Bad Request
+No file could be found with the given id.
+
+###### 500 Server error
+A file with the given id could be found in the database but not on disk.  This is most likely due to configuration issue on the server.
+
+
 #### DELETE /files/:id
 Delete the file (metadata and content) with the given id.
 
 ##### Response
+
 ###### 204 No Content
 On successful delete.
+
 
 ## Examples
 * To upload a file (assuming mu-dispatcher is running on localhost:80)
