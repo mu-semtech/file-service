@@ -48,7 +48,7 @@ get '/files/:id' do
   query += "        <#{DC.format}> ?format ;"
   query += "        <#{DBPEDIA.fileExtension}> ?extension ;"
   query += "        <#{NFO.fileSize}> ?size ."
-  query += "   ?document <#{EXT.file}> ?uri;"
+  query += "   ?document <#{EXT.file}> ?uri."
   query += "   ?document <#{EXT.toegangsniveauVoorDocumentVersie}> <http://kanselarij.vo.data.gift/id/concept/toegangs-niveaus/6ca49d86-d40f-46c9-bde3-a322aa7e5c8e>."
   query += " }"
   result = query(query)
@@ -88,7 +88,7 @@ get '/files/:id/download' do
   query = " SELECT ?fileUrl FROM <#{graph}> WHERE {"
   query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(params['id'])} ."
   query += "   ?fileUrl <#{NIE.dataSource}> ?uri ."
-  query += "   ?document <#{EXT.file}> ?uri;"
+  query += "   ?document <#{EXT.file}> ?uri."
   query += "   ?document <#{EXT.toegangsniveauVoorDocumentVersie}> <http://kanselarij.vo.data.gift/id/concept/toegangs-niveaus/6ca49d86-d40f-46c9-bde3-a322aa7e5c8e>."
   query += " }"
   result = query(query)
