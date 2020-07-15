@@ -29,81 +29,6 @@ DBPEDIA = RDF::Vocabulary.new('http://dbpedia.org/ontology/')
 
 FILE_SERVICE_RESOURCE_BASE = 'http://mu.semte.ch/services/file-service'
 
-###
-# POST /files
-# Upload a new file. Results in 2 new nfo:FileDataObject resources: one representing
-# the uploaded file and one representing the persisted file on disk generated from the upload.
-#
-# Accepts multipart/form-data with a 'file' parameter containing the file to upload
-#
-# Returns 201 on successful upload of the file
-#         400 if X-Rewrite header is missing
-#             if file param is missing
-###
-post '/files/?' do
-  rewrite_url = rewrite_url_header(request)
-  error('X-Rewrite-URL header is missing.') if rewrite_url.nil?
-  error('File parameter is required.') if params['file'].nil?
-
-  tempfile = params['file'][:tempfile]
-
-  upload_resource_uuid = generate_uuid()
-  upload_resource_name = params['file'][:filename]
-  upload_resource_uri = "#{FILE_SERVICE_RESOURCE_BASE}/files/#{upload_resource_uuid}"
-
-  file_format = file_magic.file(tempfile.path)
-  file_extension = upload_resource_name.split('.').last
-  file_size = File.size(tempfile.path)
-
-  file_resource_uuid = generate_uuid()
-  file_resource_name = "#{file_resource_uuid}.#{file_extension}"
-  file_resource_uri = file_to_shared_uri(file_resource_name)
-
-  now = DateTime.now
-
-  FileUtils.copy(tempfile.path, "#{settings.storage_path}/#{file_resource_name}")
-
-  query =  " INSERT DATA {"
-  query += "   GRAPH <#{graph}> {"
-  query += "     <#{upload_resource_uri}> a <#{NFO.FileDataObject}> ;"
-  query += "         <#{NFO.fileName}> #{upload_resource_name.sparql_escape} ;"
-  query += "         <#{MU_CORE.uuid}> #{upload_resource_uuid.sparql_escape} ;"
-  query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
-  query += "         <#{NFO.fileSize}> #{sparql_escape_int(file_size)} ;"
-  query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"
-  query += "         <#{DC.created}> #{now.sparql_escape} ;"
-  query += "         <#{DC.modified}> #{now.sparql_escape} ."
-  query += "     <#{file_resource_uri}> a <#{NFO.FileDataObject}> ;"
-  query += "         <#{NIE.dataSource}> <#{upload_resource_uri}> ;"
-  query += "         <#{NFO.fileName}> #{file_resource_name.sparql_escape} ;"
-  query += "         <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape} ;"
-  query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
-  query += "         <#{NFO.fileSize}> #{sparql_escape_int(file_size)} ;"
-  query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"
-  query += "         <#{DC.created}> #{now.sparql_escape} ;"
-  query += "         <#{DC.modified}> #{now.sparql_escape} ."
-  query += "   }"
-  query += " }"
-  update(query)
-
-  content_type 'application/vnd.api+json'
-  status 201
-  {
-    data: {
-      type: 'files',
-      id: upload_resource_uuid,
-      attributes: {
-        name: upload_resource_name,
-        format: file_format,
-        size: file_size,
-        extension: file_extension
-      }
-    },
-    links: {
-      self: "#{rewrite_url.chomp '/'}/#{upload_resource_uuid}"
-    }
-  }.to_json
-end
 
 ###
 # GET /files/:id
@@ -175,52 +100,6 @@ get '/files/:id/download' do
   else
     error("Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint.", 500)
   end
-end
-
-###
-# DELETE /files/:id
-# Delete a file and its metadata
-#
-# Returns 204 on successful removal of the file and metadata
-#         404 if a file with the given id cannot be found
-###
-delete '/files/:id' do
-  query = " SELECT ?uri ?fileUrl FROM <#{graph}> WHERE {"
-  query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(params['id'])} ."
-  query += "   ?fileUrl <#{NIE.dataSource}> ?uri ."
-  query += " }"
-  result = query(query)
-
-  return status 404 if result.empty?
-
-  query =  " DELETE WHERE {"
-  query += "   GRAPH <#{graph}> {"
-  query += "     <#{result.first[:uri]}> a <#{NFO.FileDataObject}> ;"
-  query += "       <#{NFO.fileName}> ?upload_name ;"
-  query += "       <#{MU_CORE.uuid}> ?upload_id ;"
-  query += "       <#{DC.format}> ?upload_format ;"
-  query += "       <#{DBPEDIA.fileExtension}> ?upload_extension ;"
-  query += "       <#{NFO.fileSize}> ?upload_size ;"
-  query += "       <#{DC.created}> ?upload_created ;"
-  query += "       <#{DC.modified}> ?upload_modified ."
-  query += "     <#{result.first[:fileUrl]}> a <#{NFO.FileDataObject}> ;"
-  query += "       <#{NIE.dataSource}> <#{result.first[:uri]}> ;"
-  query += "       <#{NFO.fileName}> ?fileName ;"
-  query += "       <#{MU_CORE.uuid}> ?id ;"
-  query += "       <#{DC.format}> ?format ;"
-  query += "       <#{DBPEDIA.fileExtension}> ?extension ;"
-  query += "       <#{NFO.fileSize}> ?size ;"
-  query += "       <#{DC.created}> ?created ;"
-  query += "       <#{DC.modified}> ?modified ."
-  query += "   }"
-  query += " }"
-  update(query)
-
-  url = result.first[:fileUrl].value
-  path = shared_uri_to_path(url)
-  File.delete path if File.exist? path
-
-  status 204
 end
 
 ###
