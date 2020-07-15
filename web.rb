@@ -42,7 +42,7 @@ get '/files/:id' do
   rewrite_url = rewrite_url_header(request)
   error('X-Rewrite-URL header is missing.') if rewrite_url.nil?
 
-  query = " SELECT ?uri ?name ?format ?size ?extension FROM <#{graph}> WHERE {"
+  query = " SELECT ?uri ?name ?format ?size ?extension WHERE {"
   query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(params['id'])} ;"
   query += "        <#{NFO.fileName}> ?name ;"
   query += "        <#{DC.format}> ?format ;"
@@ -85,7 +85,7 @@ end
 #         500 if the file is available in the database but not on disk
 ###
 get '/files/:id/download' do
-  query = " SELECT ?fileUrl FROM <#{graph}> WHERE {"
+  query = " SELECT ?fileUrl WHERE {"
   query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(params['id'])} ."
   query += "   ?fileUrl <#{NIE.dataSource}> ?uri ."
   query += "   ?document <#{EXT.file}> ?uri."
