@@ -52,7 +52,7 @@ get '/files/:id' do
   query += "   ?document <#{EXT.file}> ?uri."
   query += "   ?document <#{EXT.toegangsniveauVoorDocumentVersie}> <http://kanselarij.vo.data.gift/id/concept/toegangs-niveaus/6ca49d86-d40f-46c9-bde3-a322aa7e5c8e>."
   query += " }"
-  result = query_sudo(query)
+  result = Mu::AuthSudo.query(query)
 
   return status 404 if result.empty?
   result = result.first
@@ -92,7 +92,7 @@ get '/files/:id/download' do
   query += "   ?document <#{EXT.file}> ?uri."
   query += "   ?document <#{EXT.toegangsniveauVoorDocumentVersie}> <http://kanselarij.vo.data.gift/id/concept/toegangs-niveaus/6ca49d86-d40f-46c9-bde3-a322aa7e5c8e>."
   query += " }"
-  result = query(query)
+  result = Mu::AuthSudo.query(query)
 
   return status 404 if result.empty?
 
