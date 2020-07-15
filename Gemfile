@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 
-gem 'ruby-filemagic', '~> 0.7.2'
+gem 'ruby-filemagic'
 gem 'mu-auth-sudo'
