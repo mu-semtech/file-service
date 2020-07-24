@@ -16,8 +16,8 @@ file:
 Add a rule to `dispatcher.ex` to dispatch all requests starting with `/files/` to the file service. E.g. 
 
 ```elixir
-  match "/files/*path" do
-    Proxy.forward conn, path, "http://file/files/"
+  match "/file-upload/*path" do
+    forward conn, path, "http://file/files/"
   end
 ```
 The host `file` in the forward URL reflects the name of the file service in the `docker-compose.yml` file.
