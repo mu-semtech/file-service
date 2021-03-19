@@ -42,6 +42,11 @@ file:
     - ./data/my-project/uploads:/share/my-project/uploads
 ```
 
+### Resource base-URI
+
+The URI for a new upload-file resource is assembled by concatenating a resource-base with a uuid. The default base-URI is `http://mu.semte.ch/services/file-service/files/`. The base-URI is configurable through the environment variable `FILE_RESOURCE_BASE` and should contain the trailing `/`. Also see chapter "Data model > Resources" below for more information regarding upload file resources.
+
+
 ## REST API
 #### POST /files
 Upload a file. Accepts a `multipart/form-data` with a `file` parameter containing the uploaded file.

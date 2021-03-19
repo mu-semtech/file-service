@@ -14,6 +14,7 @@ end
 configure do
   set :relative_storage_path, (ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '').chomp('/')
   set :storage_path, "/share/#{(ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '')}".chomp('/')
+  set :file_resource_base, (ENV['FILE_RESOURCE_BASE'] || '')
 end
 
 file_magic = FileMagic.new(FileMagic::MAGIC_MIME)
@@ -26,8 +27,6 @@ DC = RDF::Vocab::DC
 NFO = RDF::Vocabulary.new('http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#')
 NIE = RDF::Vocabulary.new('http://www.semanticdesktop.org/ontologies/2007/01/19/nie#')
 DBPEDIA = RDF::Vocabulary.new('http://dbpedia.org/ontology/')
-
-FILE_SERVICE_RESOURCE_BASE = 'http://mu.semte.ch/services/file-service'
 
 ###
 # POST /files
@@ -49,7 +48,7 @@ post '/files/?' do
 
   upload_resource_uuid = generate_uuid()
   upload_resource_name = params['file'][:filename]
-  upload_resource_uri = "#{FILE_SERVICE_RESOURCE_BASE}/files/#{upload_resource_uuid}"
+  upload_resource_uri = "#{settings.file_resource_base}#{upload_resource_uuid}"
 
   file_format = file_magic.file(tempfile.path)
   file_extension = upload_resource_name.split('.').last
