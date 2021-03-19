@@ -154,6 +154,7 @@ end
 #
 # Returns 200 with the file content as attachment
 #         404 if a file with the given id cannot be found
+#         500 if the file is available in the database but not on disk
 ###
 get '/files/:id/download' do
   query = " SELECT ?fileUrl FROM <#{graph}> WHERE {"
@@ -169,8 +170,11 @@ get '/files/:id/download' do
 
   filename = params['name']
   filename ||= File.basename(path)
-
-  send_file path, disposition: 'attachment', filename: filename
+  if File.file?(path)
+    send_file path, disposition: 'attachment', filename: filename
+  else
+    error("Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint.", 500)
+  end
 end
 
 ###
