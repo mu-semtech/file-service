@@ -2,7 +2,7 @@
 Microservice to upload and download files and store their file-specific metadata based on [mu-ruby-template](https://github.com/mu-semtech/mu-ruby-template).
 
 ## Tutorials
-### Add mu-authorization to a stack
+### Add file-service to a stack
 Add the following snippet to your `docker-compose.yml` to include the file service in your project.
 
 ```yaml
