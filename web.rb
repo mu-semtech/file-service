@@ -192,28 +192,35 @@ delete '/files/:id' do
 
   return status 404 if result.empty?
 
-  query =  " DELETE WHERE {"
-  query += "   GRAPH <#{graph}> {"
-  query += "     <#{result.first[:uri]}> a <#{NFO.FileDataObject}> ;"
-  query += "       <#{NFO.fileName}> ?upload_name ;"
-  query += "       <#{MU_CORE.uuid}> ?upload_id ;"
-  query += "       <#{DC.format}> ?upload_format ;"
-  query += "       <#{DBPEDIA.fileExtension}> ?upload_extension ;"
-  query += "       <#{NFO.fileSize}> ?upload_size ;"
-  query += "       <#{DC.created}> ?upload_created ;"
-  query += "       <#{DC.modified}> ?upload_modified ."
-  query += "     <#{result.first[:fileUrl]}> a <#{NFO.FileDataObject}> ;"
-  query += "       <#{NIE.dataSource}> <#{result.first[:uri]}> ;"
-  query += "       <#{NFO.fileName}> ?fileName ;"
-  query += "       <#{MU_CORE.uuid}> ?id ;"
-  query += "       <#{DC.format}> ?format ;"
-  query += "       <#{DBPEDIA.fileExtension}> ?extension ;"
-  query += "       <#{NFO.fileSize}> ?size ;"
-  query += "       <#{DC.created}> ?created ;"
-  query += "       <#{DC.modified}> ?modified ."
-  query += "   }"
-  query += " }"
-  update(query)
+  delete_query = "
+    DELETE WHERE {
+      GRAPH <#{graph}> {
+        <#{result.first[:uri]}> a <#{NFO.FileDataObject}> ;
+          <#{NFO.fileName}> ?upload_name ;
+          <#{MU_CORE.uuid}> ?upload_id ;
+          <#{DC.format}> ?upload_format ;
+          <#{DBPEDIA.fileExtension}> ?upload_extension ;
+          <#{NFO.fileSize}> ?upload_size ;
+          <#{DC.created}> ?upload_created ;
+          <#{DC.modified}> ?upload_modified .
+      }
+    }
+   ;
+   DELETE WHERE {
+    GRAPH <#{graph}> {
+      <#{result.first[:fileUrl]}> a <#{NFO.FileDataObject}> ;
+        <#{NIE.dataSource}> ?v_file ;
+        <#{NFO.fileName}> ?fileName ;
+        <#{MU_CORE.uuid}> ?id ;
+        <#{DC.format}> ?format ;
+        <#{DBPEDIA.fileExtension}> ?extension ;
+        <#{NFO.fileSize}> ?size ;
+        <#{DC.created}> ?created ;
+        <#{DC.modified}> ?modified .
+    }
+  }
+  "
+  update(delete_query)
 
   url = result.first[:fileUrl].value
   path = shared_uri_to_path(url)
