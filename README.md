@@ -236,6 +236,7 @@ Download the content of the file with the given id.
 
 ##### Query paramaters
 * `name` (optional): name for the downloaded file (e.g. `/files/1/download?name=report.pdf`)
+* `content-disposition` (optional): specify with which [Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition) header-value you want the service to respond. Defaults to `attachment`.
 
 ##### Response
 
