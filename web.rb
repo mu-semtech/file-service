@@ -169,8 +169,19 @@ get '/files/:id/download' do
 
   filename = params['name']
   filename ||= File.basename(path)
+  
+  if params['content-disposition']
+    if (params['content-disposition'].casecmp 'inline') == 0
+      disposition = 'inline'
+    else
+      disposition = 'attachment'
+    end
+  else
+    disposition = 'attachment'
+  end
+
   if File.file?(path)
-    send_file path, disposition: 'attachment', filename: filename
+    send_file path, disposition: disposition, filename: filename
   else
     error("Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint.", 500)
   end
