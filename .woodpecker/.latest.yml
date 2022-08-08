@@ -3,7 +3,7 @@ pipeline:
     image: plugins/docker
     settings:
       repo: "${CI_REPO_OWNER##mu-}/mu-${CI_REPO_NAME}"
-      tags: "${CI_COMMIT_BRANCH}"
+      tags: latest
     secrets: [docker_username, docker_password]
     when:
       event: push
