@@ -169,13 +169,9 @@ get '/files/:id/download' do
 
   filename = params['name']
   filename ||= File.basename(path)
-  
-  if params['content-disposition']
-    if (params['content-disposition'].casecmp 'inline') == 0
-      disposition = 'inline'
-    else
-      disposition = 'attachment'
-    end
+
+  if params['content-disposition'] and params['content-disposition'].casecmp? 'inline'
+    disposition = 'inline'
   else
     disposition = 'attachment'
   end
