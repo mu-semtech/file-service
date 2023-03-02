@@ -64,7 +64,7 @@ post '/files/?' do
 
   query =  " INSERT DATA {"
   query += "   GRAPH <#{graph}> {"
-  query += "     #{sparql_escape_uri(upload_resource_uri}} a <#{NFO.FileDataObject}> ;"
+  query += "     #{sparql_escape_uri(upload_resource_uri)} a <#{NFO.FileDataObject}> ;"
   query += "         <#{NFO.fileName}> #{upload_resource_name.sparql_escape} ;"
   query += "         <#{MU_CORE.uuid}> #{upload_resource_uuid.sparql_escape} ;"
   query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
@@ -73,7 +73,7 @@ post '/files/?' do
   query += "         <#{DC.created}> #{now.sparql_escape} ;"
   query += "         <#{DC.modified}> #{now.sparql_escape} ."
   query += "     #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;"
-  query += "         <#{NIE.dataSource}> #{sparql_escape_uri(upload_resource_uri} ;"
+  query += "         <#{NIE.dataSource}> #{sparql_escape_uri(upload_resource_uri)} ;"
   query += "         <#{NFO.fileName}> #{file_resource_name.sparql_escape} ;"
   query += "         <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape} ;"
   query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
