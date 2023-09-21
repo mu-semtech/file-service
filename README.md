@@ -56,6 +56,15 @@ And configure these prefixes in your `repository.lisp`:
 (add-prefix "dct" "http://purl.org/dc/terms/")
 (add-prefix "dbpedia" "http://dbpedia.org/ontology/")
 ```
+
+Additionally, if you are using [mu-authorization](https://github.com/mu-semtech/mu-authorization) with resource constraints, add the new resource type to `config/authorization/config.ex`:
+
+```elixir
+    constraint: %ResourceConstraint{
+      resource_types: [
+        "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#FileDataObject",
+```
+
 ### How to upload a file using a curl command
 Assuming mu-dispatcher is running on localhost:80 a file upload can be executed using
 
