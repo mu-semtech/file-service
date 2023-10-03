@@ -7,7 +7,7 @@ Add the following snippet to your `docker-compose.yml` to include the file servi
 
 ```yaml
 file:
-  image: semtech/mu-file-service:3.3.0
+  image: semtech/mu-file-service:3.3.1
   links:
     - database:database
   volumes:
@@ -268,7 +268,7 @@ E.g.
 
 ```yaml
 file:
-  image: semtech/mu-file-service:3.3.0
+  image: semtech/mu-file-service:3.3.1
   links:
     - database:database
   environment:
