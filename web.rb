@@ -192,6 +192,12 @@ delete '/files/:id' do
 
   return status 404 if result.empty?
 
+  # NOTE: this is split in two queries because it's lighter on the
+  # triplestore.  Ideally mu-auth can split these queries in smarter and
+  # lighter way to alleviate the triplestore when the data lives in more
+  # than one graph.
+
+
   delete_query = "
     DELETE WHERE {
       GRAPH <#{graph}> {
@@ -209,7 +215,7 @@ delete '/files/:id' do
    DELETE WHERE {
     GRAPH <#{graph}> {
       <#{result.first[:fileUrl]}> a <#{NFO.FileDataObject}> ;
-        <#{NIE.dataSource}> ?v_file ;
+        <#{NIE.dataSource}> #{result.first[:uri]} ;
         <#{NFO.fileName}> ?fileName ;
         <#{MU_CORE.uuid}> ?id ;
         <#{DC.format}> ?format ;
