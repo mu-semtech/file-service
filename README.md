@@ -2,7 +2,7 @@
 Microservice to upload and download files and store their file-specific metadata based on [mu-ruby-template](https://github.com/mu-semtech/mu-ruby-template).
 
 ## Tutorials
-### Add file-service to a stack
+### Add the file-service to a stack
 Add the following snippet to your `docker-compose.yml` to include the file service in your project.
 
 ```yaml
@@ -14,23 +14,58 @@ file:
     - ./data/files:/share
 ```
 
-Next, add a rule to `./config/dispatcher/dispatcher.ex` to dispatch all requests starting with `/files/` to the file service. E.g.
+Start the service in your stack using `docker-compose up -d file`. The file service will be created.
+
+Next, add rules to `./config/dispatcher/dispatcher.ex` to dispatch all relevant requests starting with `/files/` to the file service. E.g.
 
 ```elixir
-  match "/files/*path" do
-    forward conn, path, "http://file/files/"
+  define_accept_types [
+    json: [ "application/vnd.api+json" ],
+  ]
+
+  ...
+
+  get "/files/:id/download", %{ layer: :services } do
+    Proxy.forward conn, [], "http://file/files/" <> id <> "/download"
+  end
+
+  post "/files/*path", %{ layer: :services } do
+    Proxy.forward conn, path, "http://file/files/"
+  end
+
+  delete "/files/*path", %{ accept: [ :json ], layer: :services } do
+    Proxy.forward conn, path, "http://file/files/"
   end
 ```
 
 The host `file` in the forward URL reflects the name of the file service in the `docker-compose.yml` file.
 
-Start your stack using `docker-compose up -d`. The file service will be created.
+Finally update the authorization configuration `config/authorization/config.ex` to make sure the user has appropriate read/write access on the resource type `nfo:FileDataObject`. E.g.
+
+```elixir
+    ...
+    constraint: %ResourceConstraint{
+      resource_types: [
+        "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#FileDataObject",
+        ...
+      ]
+    }
+    ...
+```
+
+Restart the dispatcher and authorization database to pick up the new configuration
+
+```bash
+docker-compose restart dispatcher database
+```
 
 More information how to setup a mu.semte.ch project can be found in [mu-project](https://github.com/mu-semtech/mu-project).
 
 ## How-to guides
 ### How to configure file resources in mu-cl-resources
-If you want to model the files of the file service in the domain of your [mu-cl-resources](https://github.com/mu-semtech/mu-cl-resources) service, add the following to your `domain.lisp`:
+If you want to model the files of the file service in the domain of your [mu-cl-resources](https://github.com/mu-semtech/mu-cl-resources) service, add the following snippet to your resource configuration.
+
+If you use the Lisp configuration format add the following to your `domain.lisp`: 
 
 ```lisp
 (define-resource file ()
@@ -57,12 +92,76 @@ And configure these prefixes in your `repository.lisp`:
 (add-prefix "dbpedia" "http://dbpedia.org/ontology/")
 ```
 
-Additionally, if you are using [mu-authorization](https://github.com/mu-semtech/mu-authorization) with resource constraints, add the new resource type to `config/authorization/config.ex`:
+If you use the JSON configuration format add the following to your `domain.json`:
+
+```javascript
+{
+  "version": "0.1",
+  "prefixes": {
+    "nfo": "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#",
+    "nie": "http://www.semanticdesktop.org/ontologies/2007/01/19/nie#",
+    "dct": "http://purl.org/dc/terms/",
+    "dbpedia": "http://dbpedia.org/resource/"
+  },
+  "resources": {
+    "files": {
+      "name": "file",
+      "class": "nfo:FileDataObject",
+      "attributes": {
+        "name": {
+          "type": "string",
+          "predicate": "nfo:fileName"
+        },
+        "format": {
+          "type": "string",
+          "predicate": "dct:format"
+        },
+        "size": {
+          "type": "integer",
+          "predicate": "nfo:fileSize"
+        },
+        "extension": {
+          "type": "string",
+          "predicate": "dbpedia:fileExtension"
+        },
+        "created": {
+          "type": "datetime",
+          "predicate": "dct:created"
+        }
+      },
+      "relationships": {
+        "download": {
+          "predicate": "nie:dataSource",
+          "target": "file",
+          "cardinality": "one",
+          "inverse": true
+        },
+      },
+      "new-resource-base": "http://data.example.com/files/",
+      "features": ["include-uri"]
+    }
+  }
+}
+```
+
+Next, add the following rule to `./config/dispatcher/dispatcher.ex`. Make sure to add it somewhere after the rule forwarding `/files/:id/download`.
 
 ```elixir
-    constraint: %ResourceConstraint{
-      resource_types: [
-        "http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#FileDataObject",
+  define_accept_types [
+    json: [ "application/vnd.api+json" ],
+  ]
+
+  ...
+
+  get "/files/*path", %{ accept: [ :json ], layer: :services } do
+    Proxy.forward conn, path, "http://resource/files/"
+  end
+```
+
+Finally, restart the services to pick up the configuration changes:
+
+```bash
+docker-compose restart resource dispatcher
 ```
 
 ### How to upload a file using a curl command
