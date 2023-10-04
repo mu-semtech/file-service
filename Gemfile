@@ -1,1 +1,1 @@
-gem 'ruby-filemagic', '~> 0.7.2'
+gem 'ruby-filemagic', '~> 0.7.3'
