@@ -222,7 +222,7 @@ delete '/files/:id' do
    DELETE WHERE {
     GRAPH <#{graph}> {
       <#{result.first[:fileUrl]}> a <#{NFO.FileDataObject}> ;
-        <#{NIE.dataSource}> #{result.first[:uri]} ;
+        <#{NIE.dataSource}> <#{result.first[:uri]}> ;
         <#{NFO.fileName}> ?fileName ;
         <#{MU_CORE.uuid}> ?id ;
         <#{DC.format}> ?format ;
