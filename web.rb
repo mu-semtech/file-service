@@ -40,13 +40,13 @@ DBPEDIA = RDF::Vocabulary.new('http://dbpedia.org/ontology/')
 #             if file param is missing
 ###
 post '/files/?' do
-  rewrite_url = rewrite_url_header(request)
-  error('X-Rewrite-URL header is missing.') if rewrite_url.nil?
-  error('File parameter is required.') if params['file'].nil?
+  rewrite_url = Mu::Helpers::rewrite_url_header(request)
+  Mu::Helpers::error('X-Rewrite-URL header is missing.') if rewrite_url.nil?
+  Mu::Helpers::error('File parameter is required.') if params['file'].nil?
 
   tempfile = params['file'][:tempfile]
 
-  upload_resource_uuid = generate_uuid()
+  upload_resource_uuid = Mu::generate_uuid()
   upload_resource_name = params['file'][:filename]
   upload_resource_uri = "#{settings.file_resource_base}#{upload_resource_uuid}"
 
@@ -54,7 +54,7 @@ post '/files/?' do
   file_extension = upload_resource_name.split('.').last
   file_size = File.size(tempfile.path)
 
-  file_resource_uuid = generate_uuid()
+  file_resource_uuid = Mu::generate_uuid()
   file_resource_name = "#{file_resource_uuid}.#{file_extension}"
   file_resource_uri = file_to_shared_uri(file_resource_name)
 
@@ -63,27 +63,27 @@ post '/files/?' do
   FileUtils.copy(tempfile.path, "#{settings.storage_path}/#{file_resource_name}")
 
   query =  " INSERT DATA {"
-  query += "   GRAPH <#{graph}> {"
-  query += "     #{sparql_escape_uri(upload_resource_uri)} a <#{NFO.FileDataObject}> ;"
+  query += "   GRAPH <#{Mu::graph}> {"
+  query += "     #{Mu::sparql_escape_uri(upload_resource_uri)} a <#{NFO.FileDataObject}> ;"
   query += "         <#{NFO.fileName}> #{upload_resource_name.sparql_escape} ;"
   query += "         <#{MU_CORE.uuid}> #{upload_resource_uuid.sparql_escape} ;"
   query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
-  query += "         <#{NFO.fileSize}> #{sparql_escape_int(file_size)} ;"
+  query += "         <#{NFO.fileSize}> #{Mu::sparql_escape_int(file_size)} ;"
   query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"
   query += "         <#{DC.created}> #{now.sparql_escape} ;"
   query += "         <#{DC.modified}> #{now.sparql_escape} ."
-  query += "     #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;"
-  query += "         <#{NIE.dataSource}> #{sparql_escape_uri(upload_resource_uri)} ;"
+  query += "     #{Mu::sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;"
+  query += "         <#{NIE.dataSource}> #{Mu::sparql_escape_uri(upload_resource_uri)} ;"
   query += "         <#{NFO.fileName}> #{file_resource_name.sparql_escape} ;"
   query += "         <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape} ;"
   query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
-  query += "         <#{NFO.fileSize}> #{sparql_escape_int(file_size)} ;"
+  query += "         <#{NFO.fileSize}> #{Mu::sparql_escape_int(file_size)} ;"
   query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"
   query += "         <#{DC.created}> #{now.sparql_escape} ;"
   query += "         <#{DC.modified}> #{now.sparql_escape} ."
   query += "   }"
   query += " }"
-  update(query)
+  Mu::update(query)
 
   content_type 'application/vnd.api+json'
   status 201
@@ -112,17 +112,17 @@ end
 #         404 if a file with the given id cannot be found
 ###
 get '/files/:id' do
-  rewrite_url = rewrite_url_header(request)
+  rewrite_url = Mu::rewrite_url_header(request)
   error('X-Rewrite-URL header is missing.') if rewrite_url.nil?
 
-  query = " SELECT ?uri ?name ?format ?size ?extension FROM <#{graph}> WHERE {"
-  query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(params['id'])} ;"
+  query = " SELECT ?uri ?name ?format ?size ?extension FROM <#{Mu::graph}> WHERE {"
+  query += "   ?uri <#{MU_CORE.uuid}> #{Mu::sparql_escape_string(params['id'])} ;"
   query += "        <#{NFO.fileName}> ?name ;"
   query += "        <#{DC.format}> ?format ;"
   query += "        <#{DBPEDIA.fileExtension}> ?extension ;"
   query += "        <#{NFO.fileSize}> ?size ."
   query += " }"
-  result = query(query)
+  result = Mu::query(query)
 
   return status 404 if result.empty?
   result = result.first
@@ -156,11 +156,11 @@ end
 #         500 if the file is available in the database but not on disk
 ###
 get '/files/:id/download' do
-  query = " SELECT ?fileUrl FROM <#{graph}> WHERE {"
-  query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(params['id'])} ."
+  query = " SELECT ?fileUrl FROM <#{Mu::graph}> WHERE {"
+  query += "   ?uri <#{MU_CORE.uuid}> #{Mu::sparql_escape_string(params['id'])} ."
   query += "   ?fileUrl <#{NIE.dataSource}> ?uri ."
   query += " }"
-  result = query(query)
+  result = Mu::query(query)
 
   return status 404 if result.empty?
 
@@ -179,7 +179,7 @@ get '/files/:id/download' do
   if File.file?(path)
     send_file path, disposition: disposition, filename: filename
   else
-    error("Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint.", 500)
+    Mu::Helpers::error("Could not find file in path. Check if the physical file is available on the server and if this service has the right mountpoint.", 500)
   end
 end
 
@@ -191,11 +191,11 @@ end
 #         404 if a file with the given id cannot be found
 ###
 delete '/files/:id' do
-  query = " SELECT ?uri ?fileUrl FROM <#{graph}> WHERE {"
-  query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(params['id'])} ."
+  query = " SELECT ?uri ?fileUrl FROM <#{Mu::graph}> WHERE {"
+  query += "   ?uri <#{MU_CORE.uuid}> #{Mu::sparql_escape_string(params['id'])} ."
   query += "   ?fileUrl <#{NIE.dataSource}> ?uri ."
   query += " }"
-  result = query(query)
+  result = Mu::query(query)
 
   return status 404 if result.empty?
 
@@ -204,10 +204,9 @@ delete '/files/:id' do
   # lighter way to alleviate the triplestore when the data lives in more
   # than one graph.
 
-
   delete_query = "
     DELETE WHERE {
-      GRAPH <#{graph}> {
+      GRAPH <#{Mu::graph}> {
         <#{result.first[:uri]}> a <#{NFO.FileDataObject}> ;
           <#{NFO.fileName}> ?upload_name ;
           <#{MU_CORE.uuid}> ?upload_id ;
@@ -220,7 +219,7 @@ delete '/files/:id' do
     }
    ;
    DELETE WHERE {
-    GRAPH <#{graph}> {
+    GRAPH <#{Mu::graph}> {
       <#{result.first[:fileUrl]}> a <#{NFO.FileDataObject}> ;
         <#{NIE.dataSource}> <#{result.first[:uri]}> ;
         <#{NFO.fileName}> ?fileName ;
@@ -233,7 +232,7 @@ delete '/files/:id' do
     }
   }
   "
-  update(delete_query)
+  Mu::update(delete_query)
 
   url = result.first[:fileUrl].value
   path = shared_uri_to_path(url)
