@@ -60,7 +60,9 @@ post '/files/?' do
 
   now = DateTime.now
 
-  FileUtils.copy(tempfile.path, "#{settings.storage_path}/#{file_resource_name}")
+  phyisical_file_path = "#{settings.storage_path}/#{file_resource_name}"
+
+  FileUtils.copy(tempfile.path, phyisical_file_path)
 
   query =  " INSERT DATA {"
   query += "   GRAPH <#{graph}> {"
@@ -84,6 +86,20 @@ post '/files/?' do
   query += "   }"
   query += " }"
   update(query)
+
+  # check if metadata is present, else remove file
+  check_query  = "SELECT ?created WHERE {"
+  check_query  += "  #{sparql_escape_uri(upload_resource_uri)} a <#{NFO.FileDataObject}> ;" 
+  check_query  += "      <#{MU_CORE.uuid}> #{upload_resource_uuid.sparql_escape}; "
+  check_query  += "      <#{DC.created}> ?created."
+  check_query  += '}'
+
+  result = query(check_query)
+
+  if result.empty?
+    File.delete phyisical_file_path if File.exist? phyisical_file_path
+    return status 403
+  end
 
   content_type 'application/vnd.api+json'
   status 201
