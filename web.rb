@@ -88,10 +88,10 @@ post '/files/?' do
   update(query)
 
   # check if metadata is present, else remove file
-  check_query  = "SELECT ?created WHERE {"
-  check_query  += "  #{sparql_escape_uri(upload_resource_uri)} a <#{NFO.FileDataObject}> ;" 
-  check_query  += "      <#{MU_CORE.uuid}> #{upload_resource_uuid.sparql_escape}; "
-  check_query  += "      <#{DC.created}> ?created."
+  check_query  = "SELECT ?uri WHERE {"
+  check_query  += "  #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;" 
+  check_query  += "      <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape}; "
+  check_query  += "      <#{NIE.dataSource}> ?uri ."
   check_query  += '}'
 
   result = query(check_query)
