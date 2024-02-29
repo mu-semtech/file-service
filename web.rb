@@ -15,6 +15,7 @@ configure do
   set :relative_storage_path, (ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '').chomp('/')
   set :storage_path, "/share/#{(ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '')}".chomp('/')
   set :file_resource_base, (ENV['FILE_RESOURCE_BASE'] || '')
+  set :allow_upload_without_read_access, (ENV['ALLOW_UPLOAD_WITHOUT_READ_ACCESS'] == 'true')
 end
 
 file_magic = FileMagic.new(FileMagic::MAGIC_MIME)
@@ -60,9 +61,9 @@ post '/files/?' do
 
   now = DateTime.now
 
-  phyisical_file_path = "#{settings.storage_path}/#{file_resource_name}"
+  physical_file_path = "#{settings.storage_path}/#{file_resource_name}"
 
-  FileUtils.copy(tempfile.path, phyisical_file_path)
+  FileUtils.copy(tempfile.path, physical_file_path)
 
   query =  " INSERT DATA {"
   query += "   GRAPH <#{graph}> {"
@@ -88,17 +89,19 @@ post '/files/?' do
   update(query)
 
   # check if metadata is present, else remove file
-  check_query  = "SELECT ?uri WHERE {"
-  check_query  += "  #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;" 
-  check_query  += "      <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape}; "
-  check_query  += "      <#{NIE.dataSource}> ?uri ."
-  check_query  += '}'
+  if not settings.allow_upload_without_read_access? 
+    check_query  = "SELECT ?uri WHERE {"
+    check_query  += "  #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;" 
+    check_query  += "      <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape}; "
+    check_query  += "      <#{NIE.dataSource}> ?uri ."
+    check_query  += '}'
 
-  result = query(check_query)
+    result = query(check_query)
 
-  if result.empty?
-    File.delete phyisical_file_path if File.exist? phyisical_file_path
-    return status 403
+    if result.empty?
+      File.delete physical_file_path if File.exist? physical_file_path
+      return status 403
+    end
   end
 
   content_type 'application/vnd.api+json'
