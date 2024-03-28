@@ -20,7 +20,7 @@ configure do
   set :relative_storage_path, (ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '').chomp('/')
   set :storage_path, "/share/#{(ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '')}".chomp('/')
   set :file_resource_base, (ENV['FILE_RESOURCE_BASE'] || '')
-  set :allow_upload_without_read_access, boolean_env('ALLOW_UPLOAD_WITHOUT_READ_ACCESS')
+  set :validate_readable_metadata, boolean_env('VALIDATE_READABLE_METADATA')
 end
 
 file_magic = FileMagic.new(FileMagic::MAGIC_MIME)
@@ -109,10 +109,11 @@ post '/files/?' do
     query += "         <#{DC.modified}> #{now.sparql_escape} ."
     query += "   }"
     query += " }"
-
     update(query)
-    accepted_file_metadata = settings.allow_upload_without_read_access? || !get_file_info(file_resource_uuid).empty?
-    if accepted_file_metadata
+
+    if settings.validate_readable_metadata && get_file_info(file_resource_uuid).empty?
+      raise UnauthorizedError.new "Could not read metadata of file."
+    else
       content_type 'application/vnd.api+json'
       status 201
       {
@@ -130,8 +131,6 @@ post '/files/?' do
           self: "#{rewrite_url.chomp '/'}/#{upload_resource_uuid}"
         }
       }.to_json
-    else
-      raise UnauthorizedError.new "Could not read metadata of file."
     end
   rescue UnauthorizedError => e
     log.warn "#{e} Cleaning up."

@@ -269,10 +269,10 @@ The URI of the stored file uses the `share://` protocol and reflects the locatio
 The following settings can be configured via environment variables:
 
 | ENV                              | Description                                                                                                           | default                                         | required |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | -------- |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|----------|
 | FILE_RESOURCE_BASE               | Base URI for a new upload-file resource. Must end with a trailing `/`. It will be concatenated with a uuid            | http://mu.semte.ch/services/file-service/files/ |          |
 | MU_APPLICATION_FILE_STORAGE_PATH | Mounted subfolder where you want to store your files. It must be a relative path to `/share/` in the Docker container | None                                            |          |
-| ALLOW_UPLOAD_WITHOUT_READ_ACCESS | Wheiter you should be allowed to upload a file without read accesses (true                                            | false                                           |          |
+| VALIDATE_READABLE_METADATA       | Whether metadata of files must be readable on upload                                                                  | false                                           |          |
 | MU_SPARQL_ENDPOINT               | SPARQL read endpoint URL                                                                                              | http://database:8890/sparql                     |          |
 | MU_SPARQL_TIMEOUT                | Timeout (in seconds) for SPARQL queries                                                                               | 60                                              |          |
 | LOG_LEVEL                        | The level of logging. Options: debug, info, warn, error, fatal                                                        | info                                            |          |
