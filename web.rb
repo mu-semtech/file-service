@@ -34,6 +34,22 @@ NFO = RDF::Vocabulary.new('http://www.semanticdesktop.org/ontologies/2007/03/22/
 NIE = RDF::Vocabulary.new('http://www.semanticdesktop.org/ontologies/2007/01/19/nie#')
 DBPEDIA = RDF::Vocabulary.new('http://dbpedia.org/ontology/')
 
+
+###
+# Supporting functions
+###
+def get_file_info file_uuid
+  query = " SELECT ?uri ?name ?format ?size ?extension FROM <#{graph}> WHERE {"
+  query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(file_uuid)} ;"
+  query += "        <#{NFO.fileName}> ?name ;"
+  query += "        <#{DC.format}> ?format ;"
+  query += "        <#{DBPEDIA.fileExtension}> ?extension ;"
+  query += "        <#{NFO.fileSize}> ?size ."
+  query += " }"
+  query(query)
+end
+
+
 ###
 # POST /files
 # Upload a new file. Results in 2 new nfo:FileDataObject resources: one representing
@@ -93,21 +109,9 @@ post '/files/?' do
   query += " }"
   update(query)
 
-  successfully_written =
-    if settings.allow_upload_without_read_access?
-      true
-    else
-      check_query  = "SELECT ?uri WHERE {"
-      check_query  += "  #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;"
-      check_query  += "      <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape}; "
-      check_query  += "      <#{NIE.dataSource}> ?uri ."
-      check_query  += '}'
+  accepted_file_metadata = settings.allow_upload_without_read_access? || !get_file_info(file_resource_uuid).empty?
 
-      result = query(check_query)
-      not result.empty?
-    end
-
-  if successfully_written
+  if accepted_file_metadata
     content_type 'application/vnd.api+json'
     status 201
     {
@@ -142,14 +146,7 @@ get '/files/:id' do
   rewrite_url = rewrite_url_header(request)
   error('X-Rewrite-URL header is missing.') if rewrite_url.nil?
 
-  query = " SELECT ?uri ?name ?format ?size ?extension FROM <#{graph}> WHERE {"
-  query += "   ?uri <#{MU_CORE.uuid}> #{sparql_escape_string(params['id'])} ;"
-  query += "        <#{NFO.fileName}> ?name ;"
-  query += "        <#{DC.format}> ?format ;"
-  query += "        <#{DBPEDIA.fileExtension}> ?extension ;"
-  query += "        <#{NFO.fileSize}> ?size ."
-  query += " }"
-  result = query(query)
+  result = get_file_info query(params['id'])
 
   return status 404 if result.empty?
   result = result.first
