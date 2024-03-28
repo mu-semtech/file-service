@@ -4,6 +4,11 @@ require 'fileutils'
 ###
 # Configuration
 ###
+
+def boolean_env env_var
+  ENV[env_var] and ENV[env_var].downcase == 'true'
+end
+
 if ENV['MU_APPLICATION_FILE_STORAGE_PATH'] and ENV['MU_APPLICATION_FILE_STORAGE_PATH'].start_with?('/')
   log.fatal "MU_APPLICATION_FILE_STORAGE_PATH (#{ENV['MU_APPLICATION_FILE_STORAGE_PATH']}) must be relative"
   exit
@@ -15,7 +20,7 @@ configure do
   set :relative_storage_path, (ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '').chomp('/')
   set :storage_path, "/share/#{(ENV['MU_APPLICATION_FILE_STORAGE_PATH'] || '')}".chomp('/')
   set :file_resource_base, (ENV['FILE_RESOURCE_BASE'] || '')
-  set :allow_upload_without_read_access, (ENV['ALLOW_UPLOAD_WITHOUT_READ_ACCESS'] == 'true')
+  set :allow_upload_without_read_access, boolean_env('ALLOW_UPLOAD_WITHOUT_READ_ACCESS')
 end
 
 file_magic = FileMagic.new(FileMagic::MAGIC_MIME)
