@@ -93,39 +93,42 @@ post '/files/?' do
   query += " }"
   update(query)
 
-  # check if metadata is present, else remove file
-  if not settings.allow_upload_without_read_access? 
-    check_query  = "SELECT ?uri WHERE {"
-    check_query  += "  #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;" 
-    check_query  += "      <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape}; "
-    check_query  += "      <#{NIE.dataSource}> ?uri ."
-    check_query  += '}'
+  successfully_written =
+    if settings.allow_upload_without_read_access?
+      true
+    else
+      check_query  = "SELECT ?uri WHERE {"
+      check_query  += "  #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;"
+      check_query  += "      <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape}; "
+      check_query  += "      <#{NIE.dataSource}> ?uri ."
+      check_query  += '}'
 
-    result = query(check_query)
-
-    if result.empty?
-      File.delete physical_file_path if File.exist? physical_file_path
-      return status 403
+      result = query(check_query)
+      not result.empty?
     end
-  end
 
-  content_type 'application/vnd.api+json'
-  status 201
-  {
-    data: {
-      type: 'files',
-      id: upload_resource_uuid,
-      attributes: {
-        name: upload_resource_name,
-        format: file_format,
-        size: file_size,
-        extension: file_extension
+  if successfully_written
+    content_type 'application/vnd.api+json'
+    status 201
+    {
+      data: {
+        type: 'files',
+        id: upload_resource_uuid,
+        attributes: {
+          name: upload_resource_name,
+          format: file_format,
+          size: file_size,
+          extension: file_extension
+        }
+      },
+      links: {
+        self: "#{rewrite_url.chomp '/'}/#{upload_resource_uuid}"
       }
-    },
-    links: {
-      self: "#{rewrite_url.chomp '/'}/#{upload_resource_uuid}"
-    }
-  }.to_json
+    }.to_json
+  else
+    File.delete physical_file_path if File.exist? physical_file_path
+    status 403
+  end
 end
 
 ###
