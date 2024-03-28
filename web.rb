@@ -49,6 +49,7 @@ def get_file_info file_uuid
   query(query)
 end
 
+class UnauthorizedError < StandardError; end
 
 ###
 # POST /files
@@ -66,72 +67,80 @@ post '/files/?' do
   error('X-Rewrite-URL header is missing.') if rewrite_url.nil?
   error('File parameter is required.') if params['file'].nil?
 
-  tempfile = params['file'][:tempfile]
+  begin
+    tempfile = params['file'][:tempfile]
 
-  upload_resource_uuid = generate_uuid()
-  upload_resource_name = params['file'][:filename]
-  upload_resource_uri = "#{settings.file_resource_base}#{upload_resource_uuid}"
+    upload_resource_uuid = generate_uuid()
+    upload_resource_name = params['file'][:filename]
+    upload_resource_uri = "#{settings.file_resource_base}#{upload_resource_uuid}"
 
-  file_format = file_magic.file(tempfile.path)
-  file_extension = upload_resource_name.split('.').last
-  file_size = File.size(tempfile.path)
+    file_format = file_magic.file(tempfile.path)
+    file_extension = upload_resource_name.split('.').last
+    file_size = File.size(tempfile.path)
 
-  file_resource_uuid = generate_uuid()
-  file_resource_name = "#{file_resource_uuid}.#{file_extension}"
-  file_resource_uri = file_to_shared_uri(file_resource_name)
+    file_resource_uuid = generate_uuid()
+    file_resource_name = "#{file_resource_uuid}.#{file_extension}"
+    file_resource_uri = file_to_shared_uri(file_resource_name)
 
-  now = DateTime.now
+    now = DateTime.now
 
-  physical_file_path = "#{settings.storage_path}/#{file_resource_name}"
+    physical_file_path = "#{settings.storage_path}/#{file_resource_name}"
 
-  FileUtils.copy(tempfile.path, physical_file_path)
+    FileUtils.copy(tempfile.path, physical_file_path)
 
-  query =  " INSERT DATA {"
-  query += "   GRAPH <#{graph}> {"
-  query += "     #{sparql_escape_uri(upload_resource_uri)} a <#{NFO.FileDataObject}> ;"
-  query += "         <#{NFO.fileName}> #{upload_resource_name.sparql_escape} ;"
-  query += "         <#{MU_CORE.uuid}> #{upload_resource_uuid.sparql_escape} ;"
-  query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
-  query += "         <#{NFO.fileSize}> #{sparql_escape_int(file_size)} ;"
-  query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"
-  query += "         <#{DC.created}> #{now.sparql_escape} ;"
-  query += "         <#{DC.modified}> #{now.sparql_escape} ."
-  query += "     #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;"
-  query += "         <#{NIE.dataSource}> #{sparql_escape_uri(upload_resource_uri)} ;"
-  query += "         <#{NFO.fileName}> #{file_resource_name.sparql_escape} ;"
-  query += "         <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape} ;"
-  query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
-  query += "         <#{NFO.fileSize}> #{sparql_escape_int(file_size)} ;"
-  query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"
-  query += "         <#{DC.created}> #{now.sparql_escape} ;"
-  query += "         <#{DC.modified}> #{now.sparql_escape} ."
-  query += "   }"
-  query += " }"
-  update(query)
+    query =  " INSERT DATA {"
+    query += "   GRAPH <#{graph}> {"
+    query += "     #{sparql_escape_uri(upload_resource_uri)} a <#{NFO.FileDataObject}> ;"
+    query += "         <#{NFO.fileName}> #{upload_resource_name.sparql_escape} ;"
+    query += "         <#{MU_CORE.uuid}> #{upload_resource_uuid.sparql_escape} ;"
+    query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
+    query += "         <#{NFO.fileSize}> #{sparql_escape_int(file_size)} ;"
+    query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"
+    query += "         <#{DC.created}> #{now.sparql_escape} ;"
+    query += "         <#{DC.modified}> #{now.sparql_escape} ."
+    query += "     #{sparql_escape_uri(file_resource_uri)} a <#{NFO.FileDataObject}> ;"
+    query += "         <#{NIE.dataSource}> #{sparql_escape_uri(upload_resource_uri)} ;"
+    query += "         <#{NFO.fileName}> #{file_resource_name.sparql_escape} ;"
+    query += "         <#{MU_CORE.uuid}> #{file_resource_uuid.sparql_escape} ;"
+    query += "         <#{DC.format}> #{file_format.sparql_escape} ;"
+    query += "         <#{NFO.fileSize}> #{sparql_escape_int(file_size)} ;"
+    query += "         <#{DBPEDIA.fileExtension}> #{file_extension.sparql_escape} ;"
+    query += "         <#{DC.created}> #{now.sparql_escape} ;"
+    query += "         <#{DC.modified}> #{now.sparql_escape} ."
+    query += "   }"
+    query += " }"
 
-  accepted_file_metadata = settings.allow_upload_without_read_access? || !get_file_info(file_resource_uuid).empty?
-
-  if accepted_file_metadata
-    content_type 'application/vnd.api+json'
-    status 201
-    {
-      data: {
-        type: 'files',
-        id: upload_resource_uuid,
-        attributes: {
-          name: upload_resource_name,
-          format: file_format,
-          size: file_size,
-          extension: file_extension
+    update(query)
+    accepted_file_metadata = settings.allow_upload_without_read_access? || !get_file_info(file_resource_uuid).empty?
+    if accepted_file_metadata
+      content_type 'application/vnd.api+json'
+      status 201
+      {
+        data: {
+          type: 'files',
+          id: upload_resource_uuid,
+          attributes: {
+            name: upload_resource_name,
+            format: file_format,
+            size: file_size,
+            extension: file_extension
+          }
+        },
+        links: {
+          self: "#{rewrite_url.chomp '/'}/#{upload_resource_uuid}"
         }
-      },
-      links: {
-        self: "#{rewrite_url.chomp '/'}/#{upload_resource_uuid}"
-      }
-    }.to_json
-  else
+      }.to_json
+    else
+      raise UnauthorizedError.new "Could not read metadata of file."
+    end
+  rescue UnauthorizedError => e
+    log.warn "#{e} Cleaning up."
     File.delete physical_file_path if File.exist? physical_file_path
     status 403
+  rescue SPARQL::Client::MalformedQuery, SPARQL::Client::ClientError, SPARQL::Client::ServerError => e
+    log.warn "Something went wrong while upload file. Cleaning up. #{e}"
+    File.delete physical_file_path if File.exist? physical_file_path
+    status 500
   end
 end
 
