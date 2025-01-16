@@ -10,7 +10,7 @@ def boolean_env env_var
 end
 
 if ENV['MU_APPLICATION_FILE_STORAGE_PATH'] and ENV['MU_APPLICATION_FILE_STORAGE_PATH'].start_with?('/')
-  log.fatal "MU_APPLICATION_FILE_STORAGE_PATH (#{ENV['MU_APPLICATION_FILE_STORAGE_PATH']}) must be relative"
+  Mu::log.fatal "MU_APPLICATION_FILE_STORAGE_PATH (#{ENV['MU_APPLICATION_FILE_STORAGE_PATH']}) must be relative"
   exit
 else
   FileUtils.mkdir_p "/share/#{ENV['MU_APPLICATION_FILE_STORAGE_PATH']}"
@@ -133,11 +133,11 @@ post '/files/?' do
       }.to_json
     end
   rescue UnauthorizedError => e
-    log.warn "#{e} Cleaning up."
+    Mu::log.warn "#{e} Cleaning up."
     File.delete physical_file_path if File.exist? physical_file_path
     status 403
   rescue SPARQL::Client::MalformedQuery, SPARQL::Client::ClientError, SPARQL::Client::ServerError => e
-    log.warn "Something went wrong while upload file. Cleaning up. #{e}"
+    Mu::log.warn "Something went wrong while upload file. Cleaning up. #{e}"
     File.delete physical_file_path if File.exist? physical_file_path
     status 500
   end
