@@ -39,7 +39,7 @@ DBPEDIA = RDF::Vocabulary.new('http://dbpedia.org/ontology/')
 # Supporting functions
 ###
 def get_file_info file_uuid
-  query = " SELECT ?uri ?name ?format ?size ?extension FROM <#{graph}> WHERE {"
+  query = " SELECT ?uri ?name ?format ?size ?extension FROM <#{Mu::graph}> WHERE {"
   query += "   ?uri <#{MU_CORE.uuid}> #{Mu::sparql_escape_string(file_uuid)} ;"
   query += "        <#{NFO.fileName}> ?name ;"
   query += "        <#{DC.format}> ?format ;"
