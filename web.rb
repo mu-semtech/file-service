@@ -151,7 +151,7 @@ end
 #         404 if a file with the given id cannot be found
 ###
 get '/files/:id' do
-  rewrite_url = Mu::rewrite_url_header(request)
+  rewrite_url = Mu::Helpers::rewrite_url_header(request)
   error('X-Rewrite-URL header is missing.') if rewrite_url.nil?
 
   result = get_file_info query(params['id'])
