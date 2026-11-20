@@ -1,4 +1,4 @@
-FROM semtech/mu-ruby-template:3.2.1
+FROM semtech/mu-ruby-template:3.2.2
 LABEL maintainer="erika.pauwels@gmail.com"
 
 ENV USE_LEGACY_UTILS 'false'
