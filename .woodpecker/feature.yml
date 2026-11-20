@@ -1,13 +1,19 @@
 steps:
   build-and-push:
-    image: woodpeckerci/plugin-docker-buildx
+    image: redpencil/plugin-docker-buildx:latest
+    pull: true
     settings:
+      platforms:
+        - linux/amd64
+        - linux/arm64
       repo: "${CI_REPO_OWNER##mu-}/mu-${CI_REPO_NAME}"
       tags: "feature-${CI_COMMIT_BRANCH##feature/}"
       username:
         from_secret: docker_username
       password:
         from_secret: docker_password
+      ssh_key:
+        from_secret: ssh_key
 when:
   - event: push
     branch: [feature/*]
